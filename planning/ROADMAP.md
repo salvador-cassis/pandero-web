@@ -118,7 +118,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 ## Key Technical Decisions (for plan-phase reference)
 
 - **Time-stretching engine**: `@soundtouchjs/audio-worklet` v1.0.8. Reject legacy `soundtouchjs@0.2.1` (ScriptProcessorNode), `rubberband-web` (dead), and native `preservesPitch` (not true time-stretching).
-- **Gap artifact mitigation**: Set `source.playbackRate.value = ratio` AND `stNode.tempo.value = ratio` in tandem. SoundTouch corrects pitch only; source node handles speed. Non-negotiable.
+- **Gap artifact mitigation**: Set `source.playbackRate.value = ratio` AND `stNode.playbackRate.value = ratio` in tandem. Do NOT use `stNode.tempo.value` in the tandem pattern. SoundTouch corrects pitch only; source node handles speed. Non-negotiable.
 - **iOS mute switch**: Use `unmute-ios-audio` (feross) on first user gesture. Cannot be simulated — test on real hardware in Phase 1.
 - **AudioContext creation**: Always inside a user gesture handler, never on page load. Handle `'interrupted'` state (iOS screen lock / backgrounding).
 - **Self-hosted worklet**: `soundtouch-processor.js` must be served from the same origin as `player.js`. `addModule()` is blocked cross-origin.
