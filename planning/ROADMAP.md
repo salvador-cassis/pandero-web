@@ -43,8 +43,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Slider controls and AudioParam wiring (tempo slider → `stNode.tempo` + `source.playbackRate` in tandem, pitch slider → `stNode.pitchSemitones`, volume slider → `GainNode.gain`, range definitions matching CTRL-02 and CTRL-03 specs)
-- [ ] 02-02: Display values, play/pause toggle, and reset (live BPM calculation from tempo ratio × base BPM, semitone offset display, play/pause button state management, one-click reset to defaults for both sliders)
+- [ ] 02-01-PLAN.md — WSOLA parameter patch and GainNode insertion (patch soundtouch-processor.js to accept processorOptions with sequenceMs=40/seekWindowMs=15/overlapMs=8, switch to raw AudioWorkletNode, insert GainNode between stNode and destination)
+- [ ] 02-02-PLAN.md — Controls, display values, toggle, and reset (play/pause toggle with restart-on-click, tempo slider with live BPM display, pitch slider with signed semitone display, volume slider via GainNode, reset button for tempo+pitch, Space-to-pause keyboard shortcut)
 
 ### Phase 3: Mobile Polish and Embedding
 **Goal**: The widget is usable on a phone held on a music stand, and can be dropped into the existing HTML site with two lines
