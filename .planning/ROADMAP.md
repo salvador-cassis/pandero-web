@@ -9,7 +9,7 @@ Four phases that build on each other in strict dependency order. Phase 1 proves 
 - [ ] **Phase 1: Audio Engine Foundation** - Prove SoundTouch AudioWorklet works end-to-end including real iOS hardware
 - [ ] **Phase 2: Playback Controls and Core UI** - All table-stakes controls wired to the audio engine
 - [ ] **Phase 3: Mobile Polish and Embedding** - Responsive layout, touch targets, and clean widget embedding
-- [ ] **Phase 4: Cueca-Specific UX Refinements** - Default tempo, vocabulary labels, and named key display
+- [ ] **Phase 4: Cueca-Specific UX Refinements** - Default tempo and vocabulary labels for the cueca community
 
 ## Phase Details
 
@@ -62,18 +62,16 @@ Plans:
 - [ ] 03-02: Widget file structure and isolation (`dairapp/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`; IIFE or ES module scope isolation; scoped CSS selectors prefixed `dairapp-`; auto-mount from `div#dairapp-player`; two-line embed verified in a real host page)
 
 ### Phase 4: Cueca-Specific UX Refinements
-**Goal**: The tool communicates from first load that it is built for cueca — the default tempo, the vocabulary, and the key display speak directly to the target community
+**Goal**: The tool communicates from first load that it is built for cueca — the default tempo and vocabulary labels speak directly to the target community
 **Depends on**: Phase 3
-**Requirements**: VIS-03, CUE-01, CUE-02
+**Requirements**: CUE-01, CUE-02
 **Success Criteria** (what must be TRUE):
-  1. On first load (before any interaction), the tempo slider is set to the cueca default (90–100 BPM confirmed with project owner) and the BPM display reflects that value
+  1. On first load (before any interaction), the tempo slider is set to a cueca-appropriate default (~90–100 BPM) and the BPM display reflects that value
   2. The tempo slider shows vocabulary labels at meaningful positions: "lento", "normal", "animado" aligned to their approximate BPM positions
-  3. The pitch display shows both the semitone offset and the resulting key name in Spanish notation (e.g., "La", "Si♭") calculated from the pandero recording's source key
-**Plans**: 2 plans
+**Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Default tempo and vocabulary labels (set initial tempo to cueca default on mount, add "lento / normal / animado" labels to tempo slider at ~70 / ~95 / ~120 BPM positions — exact positions confirmed with project owner)
-- [ ] 04-02: Named key display (determine source key of pandero MP3, build semitone-to-key-name lookup table for Spanish notation, display calculated key name alongside semitone offset in pitch display, verify correct names at all ±6 semitone positions)
+- [ ] 04-01: Default tempo and vocabulary labels (set initial tempo to cueca default on mount, add "lento / normal / animado" labels to tempo slider at ~70 / ~95 / ~120 BPM positions)
 
 ## Progress
 
@@ -110,11 +108,10 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 | UI-02 | Phase 3 | UI y Embedding |
 | UI-03 | Phase 3 | UI y Embedding |
 | UI-04 | Phase 3 | UI y Embedding |
-| VIS-03 | Phase 4 | Visualizacion |
 | CUE-01 | Phase 4 | Cueca UX |
 | CUE-02 | Phase 4 | Cueca UX |
 
-**v1 requirements mapped: 20/20. No orphans.**
+**v1 requirements mapped: 19/19. No orphans.**
 
 ---
 
@@ -126,7 +123,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 - **AudioContext creation**: Always inside a user gesture handler, never on page load. Handle `'interrupted'` state (iOS screen lock / backgrounding).
 - **Self-hosted worklet**: `soundtouch-processor.js` must be served from the same origin as `player.js`. `addModule()` is blocked cross-origin.
 - **Development server**: AudioWorklet requires a Secure Context. Always run `npx serve .` or `python3 -m http.server` — never open `file://` directly. Check `window.isSecureContext` during init.
-- **Content dependency (Phase 4)**: The pandero MP3 source key must be confirmed by the project owner before the named key display can be implemented. Not a blocker for Phases 1-3.
+- **Pandero MP3 location**: `/Users/salvadorcassis/Documents/08_PROYECTOS_DIGITALES/copy-of-maestro-de-cueca/pandero.mp3` — copy to `dairapp/pandero.mp3` during Phase 1 scaffold.
 
 ---
 *Roadmap created: 2026-03-22*

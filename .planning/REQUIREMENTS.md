@@ -25,8 +25,7 @@
 ### Visualización
 
 - [ ] **VIS-01**: El BPM actual se muestra junto al slider de tempo
-- [ ] **VIS-02**: Los semitonos actuales se muestran junto al slider de pitch
-- [ ] **VIS-03**: La tonalidad resultante se muestra en nombre de nota (ej: "La", "Si♭") calculada desde la tonalidad base del pandero
+- [ ] **VIS-02**: Los semitonos actuales se muestran junto al slider de pitch (+2, -1, etc.)
 
 ### UI y Embedding
 
@@ -57,6 +56,7 @@
 | Feature | Razón |
 |---------|-------|
 | Carga de archivos por el usuario | Destruye la identidad "curado para cueca"; agrega complejidad de formato/tamaño; excluido en PROJECT.md |
+| Display de nombre de nota (ej: "La", "Si♭") | El pandero es percusión, no tiene tonalidad de referencia — mostrar nombre de nota no aplica |
 | Descarga/exportación del audio modificado | No es parte del flujo de práctica; requeriría ffmpeg.wasm u otro encoder pesado |
 | Login / cuentas de usuario | Fricción innecesaria para una herramienta pública de comunidad |
 | Marcadores A-B de sección | La pista de pandero es homogénea — no hay secciones que navegar |
@@ -84,7 +84,6 @@
 | CTRL-05 | Phase 2 | Pending |
 | VIS-01 | Phase 2 | Pending |
 | VIS-02 | Phase 2 | Pending |
-| VIS-03 | Phase 4 | Pending |
 | UI-01 | Phase 3 | Pending |
 | UI-02 | Phase 3 | Pending |
 | UI-03 | Phase 3 | Pending |
@@ -93,10 +92,10 @@
 | CUE-02 | Phase 4 | Pending |
 
 **Coverage:**
-- v1 requirements: 20 total
-- Mapped to phases: 20
+- v1 requirements: 19 total
+- Mapped to phases: 19
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 after initial definition*
+*Last updated: 2026-03-22 — VIS-03 removido (pandero es percusión, sin tonalidad)*

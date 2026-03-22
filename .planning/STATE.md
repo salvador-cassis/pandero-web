@@ -20,13 +20,12 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 | 1 | Audio Engine Foundation | ○ Pending | 0/3 |
 | 2 | Playback Controls and Core UI | ○ Pending | 0/2 |
 | 3 | Mobile Polish and Embedding | ○ Pending | 0/2 |
-| 4 | Cueca-Specific UX Refinements | ○ Pending | 0/2 |
+| 4 | Cueca-Specific UX Refinements | ○ Pending | 0/1 |
 
-## Open Dependencies
+## Notes
 
-- Phase 4 requires confirming with project owner before planning:
-  - Default BPM (range: 90–100 BPM; exact value determines "normal" label position)
-  - Source key of the pandero MP3 recording (needed to calculate named key display)
+- Pandero MP3 en: `/Users/salvadorcassis/Documents/08_PROYECTOS_DIGITALES/copy-of-maestro-de-cueca/pandero.mp3`
+- El pandero es percusión sin tonalidad — el pitch slider muestra semitonos, no nombre de nota (VIS-03 eliminado)
 
 ---
-*Last updated: 2026-03-22 after project initialization*
+*Last updated: 2026-03-22 — ajuste por aclaración de tonalidad del pandero*
