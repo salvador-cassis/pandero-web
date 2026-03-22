@@ -97,8 +97,8 @@ async function startPlayback() {
 // ---------------------------------------------------------------------------
 // togglePlayback() — click handler for toggle-btn.
 // First click: initializes AudioContext, starts playback, shows pause icon.
-// Subsequent clicks while playing: restart from beginning (D-04), stays pause icon.
-// Click when paused: resumes playback, shows pause icon.
+// Click while playing: pause (suspend), shows play icon.
+// Click while paused: resume playback, shows pause icon.
 // ---------------------------------------------------------------------------
 async function togglePlayback() {
   const btn = document.getElementById('toggle-btn');
@@ -113,13 +113,11 @@ async function togglePlayback() {
 
   if (!isPlaying) {
     await audioCtx.resume();
-    await startPlayback();
+    if (!source) await startPlayback();
     isPlaying = true;
     btn.textContent = '\u23F8';  // ⏸ pause icon
   } else {
-    // D-04: click while playing = restart from beginning (not pause)
-    await startPlayback();
-    // isPlaying stays true, button stays pause icon
+    await pausePlayback();
   }
 }
 
@@ -196,15 +194,10 @@ document.getElementById('pitch').addEventListener('input', handlePitchChange);
 document.getElementById('volume').addEventListener('input', handleVolumeChange);
 document.getElementById('reset-btn').addEventListener('click', handleReset);
 
-// Space key: pause when playing, resume/play when paused.
-// Gives the musician a way to pause without a dedicated pause button.
+// Space key: same as clicking the toggle button.
 document.addEventListener('keydown', async (e) => {
   if (e.code === 'Space' && isInitialized) {
     e.preventDefault();
-    if (isPlaying) {
-      await pausePlayback();
-    } else {
-      await togglePlayback();
-    }
+    await togglePlayback();
   }
 });
