@@ -28,7 +28,7 @@ Four phases that build on each other in strict dependency order. Phase 1 proves 
 Plans:
 - [x] 01-01: Project scaffold and local dev server setup (file structure, HTTPS-or-localhost constraint, `isSecureContext` guard, `soundtouch-processor.js` self-hosted at same origin)
 - [x] 01-02: Audio pipeline implementation (`fetch()` + `decodeAudioData()` asset loader, `AudioBufferSourceNode → SoundTouchNode → destination` graph, lazy `AudioContext` creation inside click handler, `playbackRate` tandem pattern for gap mitigation)
-- [ ] 01-03: iOS compatibility and loop verification (`unmute-ios-audio` on first gesture, `'interrupted'` state handling, continuous loop implementation, real-device test on iOS Safari with mute switch)
+- [x] 01-03: iOS compatibility and loop verification (`unmute-ios-audio` on first gesture, `'interrupted'` state handling, continuous loop implementation, real-device test on iOS Safari with mute switch)
 
 ### Phase 2: Playback Controls and Core UI
 **Goal**: Every table-stakes control is present and wired to the audio engine — a musician can pick up the tool and use it without instructions
