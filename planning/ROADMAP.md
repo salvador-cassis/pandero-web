@@ -26,7 +26,7 @@ Four phases that build on each other in strict dependency order. Phase 1 proves 
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Project scaffold and local dev server setup (file structure, HTTPS-or-localhost constraint, `isSecureContext` guard, `soundtouch-processor.js` self-hosted at same origin)
+- [x] 01-01: Project scaffold and local dev server setup (file structure, HTTPS-or-localhost constraint, `isSecureContext` guard, `soundtouch-processor.js` self-hosted at same origin)
 - [ ] 01-02: Audio pipeline implementation (`fetch()` + `decodeAudioData()` asset loader, `AudioBufferSourceNode → SoundTouchNode → destination` graph, lazy `AudioContext` creation inside click handler, `playbackRate` tandem pattern for gap mitigation)
 - [ ] 01-03: iOS compatibility and loop verification (`unmute-ios-audio` on first gesture, `'interrupted'` state handling, continuous loop implementation, real-device test on iOS Safari with mute switch)
 
@@ -80,7 +80,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Audio Engine Foundation | 0/3 | Not started | - |
+| 1. Audio Engine Foundation | 1/3 | In Progress|  |
 | 2. Playback Controls and Core UI | 0/2 | Not started | - |
 | 3. Mobile Polish and Embedding | 0/2 | Not started | - |
 | 4. Cueca-Specific UX Refinements | 0/2 | Not started | - |

@@ -11,7 +11,7 @@
 - [ ] **ENG-02**: El tempo puede modificarse de forma independiente al pitch (time-stretching real)
 - [ ] **ENG-03**: El pitch puede modificarse de forma independiente al tempo (pitch-shifting real)
 - [ ] **ENG-04**: El audio se reproduce en loop continuo automáticamente
-- [ ] **ENG-05**: El AudioContext se crea dentro de un gesto del usuario (política autoplay del browser)
+- [x] **ENG-05**: El AudioContext se crea dentro de un gesto del usuario (política autoplay del browser)
 - [ ] **ENG-06**: El audio funciona en iOS aunque el switch de silencio esté activado
 
 ### Controles de Reproducción
@@ -75,7 +75,7 @@
 | ENG-02 | Phase 1 | Pending |
 | ENG-03 | Phase 1 | Pending |
 | ENG-04 | Phase 1 | Pending |
-| ENG-05 | Phase 1 | Pending |
+| ENG-05 | Phase 1 | Complete |
 | ENG-06 | Phase 1 | Pending |
 | CTRL-01 | Phase 2 | Pending |
 | CTRL-02 | Phase 2 | Pending |
