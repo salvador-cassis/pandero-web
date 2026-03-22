@@ -183,7 +183,7 @@ document.getElementById('reset-btn').addEventListener('click', handleReset);
 
 // Space key: same as clicking the toggle button.
 document.addEventListener('keydown', async (e) => {
-  if (e.code === 'Space' && isInitialized) {
+  if (e.code === 'Space') {
     e.preventDefault();
     await togglePlayback();
   }
