@@ -12,14 +12,13 @@ El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Reproducir un MP3 fijo de pandero desde el navegador — Validated in Phase 1: Audio Engine Foundation
+- [x] Controlar el tempo de forma independiente (sin afectar pitch) — Validated in Phase 1: Audio Engine Foundation
+- [x] Controlar el pitch de forma independiente (sin afectar tempo) — Validated in Phase 1: Audio Engine Foundation
+- [x] Interfaz embebible en web existente (HTML/JS puro, sin framework) — Validated in Phase 3: Mobile Polish and Embedding
 
 ### Active
 
-- [ ] Reproducir un MP3 fijo de pandero desde el navegador
-- [ ] Controlar el tempo de forma independiente (sin afectar pitch)
-- [ ] Controlar el pitch de forma independiente (sin afectar tempo)
-- [ ] Interfaz embebible en web existente (HTML/JS puro, sin framework)
 - [ ] Accesible para público general sin instalación
 
 ### Out of Scope
@@ -73,4 +72,4 @@ Este documento evoluciona en cada transición de fase y milestone.
 4. Actualizar Context con estado actual
 
 ---
-*Last updated: 2026-03-22 after initialization*
+*Last updated: 2026-03-22 — Phase 3 complete*
