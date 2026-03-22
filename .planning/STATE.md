@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 
 ## Notes
 
-- Pandero MP3 en: `/Users/salvadorcassis/Documents/08_PROYECTOS_DIGITALES/copy-of-maestro-de-cueca/pandero.mp3`
+- Pandero MP3 ya está en la raíz del proyecto: `pandero.mp3`
 - El pandero es percusión sin tonalidad — el pitch slider muestra semitonos, no nombre de nota (VIS-03 eliminado)
 
 ---

@@ -123,7 +123,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 - **AudioContext creation**: Always inside a user gesture handler, never on page load. Handle `'interrupted'` state (iOS screen lock / backgrounding).
 - **Self-hosted worklet**: `soundtouch-processor.js` must be served from the same origin as `player.js`. `addModule()` is blocked cross-origin.
 - **Development server**: AudioWorklet requires a Secure Context. Always run `npx serve .` or `python3 -m http.server` — never open `file://` directly. Check `window.isSecureContext` during init.
-- **Pandero MP3 location**: `/Users/salvadorcassis/Documents/08_PROYECTOS_DIGITALES/copy-of-maestro-de-cueca/pandero.mp3` — copy to `dairapp/pandero.mp3` during Phase 1 scaffold.
+- **Pandero MP3**: already at project root `pandero.mp3` — move to `dairapp/pandero.mp3` during Phase 1 scaffold.
 
 ---
 *Roadmap created: 2026-03-22*
