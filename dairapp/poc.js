@@ -96,9 +96,8 @@ async function startPlayback() {
 
 // ---------------------------------------------------------------------------
 // togglePlayback() — click handler for toggle-btn.
-// First click: initializes AudioContext, starts playback, shows pause icon.
-// Click while playing: pause (suspend), shows play icon.
-// Click while paused: resume playback, shows pause icon.
+// Not playing: start from beginning, show ⏸.
+// Playing: stop completely, show ▶. Next click starts from beginning.
 // ---------------------------------------------------------------------------
 async function togglePlayback() {
   const btn = document.getElementById('toggle-btn');
@@ -113,27 +112,15 @@ async function togglePlayback() {
 
   if (!isPlaying) {
     await audioCtx.resume();
-    if (!source) await startPlayback();
+    await startPlayback();
     isPlaying = true;
-    btn.textContent = '\u23F8';  // ⏸ pause icon
+    btn.textContent = '\u23F8';  // ⏸
   } else {
-    await pausePlayback();
+    if (source) { source.stop(); source.disconnect(); source = null; }
+    if (stNode) { stNode.disconnect(); stNode = null; }
+    isPlaying = false;
+    btn.textContent = '\u25B6';  // ▶
   }
-}
-
-// ---------------------------------------------------------------------------
-// pausePlayback() — suspends the AudioContext (preserves playback position).
-// NEVER calls source.stop() — that makes the node unusable (Pitfall 6).
-// Triggered by Space key (keyboard handler below). No visible pause button.
-// ---------------------------------------------------------------------------
-async function pausePlayback() {
-  if (!audioCtx || !isPlaying) return;
-
-  await audioCtx.suspend();
-  isPlaying = false;
-
-  document.getElementById('toggle-btn').textContent = '\u25B6';  // ▶ play icon
-  document.getElementById('status').textContent = '';
 }
 
 // ---------------------------------------------------------------------------
