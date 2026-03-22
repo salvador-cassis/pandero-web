@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.backtrackitapp.com)",
+      "WebFetch(domain:pitchtech.ch)",
+      "WebFetch(domain:www.jsdelivr.com)",
+      "Bash(node \"/Users/salvadorcassis/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: complete project research\" --files .planning/research/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

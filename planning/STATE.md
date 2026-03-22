@@ -2,7 +2,7 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-22)
+See: planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte al otro, para practicar cueca en cualquier nivel y contexto.
 **Current focus:** Phase 1 — Audio Engine Foundation
