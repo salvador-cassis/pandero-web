@@ -1,0 +1,193 @@
+/* =============================================================
+   Pandero Widget — player.css
+   Visual identity: earthy/handmade, hexagon + circle motifs.
+   All selectors prefixed pandero-* to avoid host page leakage.
+   Scoped to #pandero-player; no :root tokens.
+   ============================================================= */
+
+/* ---------------------------------------------------------------
+   Self-hosted font — Caveat Regular (handwritten aesthetic)
+--------------------------------------------------------------- */
+@font-face {
+  font-family: 'Caveat';
+  src: url('./caveat-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------
+   CSS custom property token system scoped to widget root (D-14, D-15)
+   Host page may override any token for theming.
+--------------------------------------------------------------- */
+#pandero-player {
+  --pandero-bg:         #f5eedc;   /* off-white / goatskin */
+  --pandero-surface:    #3b1f0e;   /* dark brown / wood */
+  --pandero-accent:     #c4702b;   /* warm ochre */
+  --pandero-text:       #3b1f0e;   /* dark brown */
+  --pandero-track:      #c4a882;   /* mid ochre for slider tracks */
+  --pandero-font:       'Caveat', cursive;
+  --pandero-size-label: 0.9rem;
+  --pandero-size-value: 1.1rem;
+  --pandero-hex-size:   120px;
+  --pandero-gap:        1.25rem;
+}
+
+/* ---------------------------------------------------------------
+   Widget root — mobile-first flexbox column (D-09, UI-01)
+   max-width 375px handles all screen sizes; centers on larger screens.
+--------------------------------------------------------------- */
+#pandero-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--pandero-gap);
+  padding: 1.5rem 1rem;
+  background-color: var(--pandero-bg);
+  max-width: 375px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--pandero-font);
+  color: var(--pandero-text);
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------------
+   Inner widget wrapper
+--------------------------------------------------------------- */
+.pandero-widget {
+  display: contents;
+}
+
+/* ---------------------------------------------------------------
+   Hexagon play/stop button (D-05, D-06, D-08)
+   Handmade clip-path with vertex perturbation for imperfect feel.
+   120px wide × 0.866 tall ≈ 120px × 104px — well above 44px minimum.
+--------------------------------------------------------------- */
+.pandero-play-btn {
+  width: var(--pandero-hex-size, 120px);
+  aspect-ratio: 1 / 0.866;
+  aspect-ratio: 1 / cos(30deg);
+  clip-path: polygon(51% 1%, 99% 24%, 100% 76%, 49% 99%, 1% 77%, 0% 25%);
+  background-color: var(--pandero-surface);
+  color: var(--pandero-bg);
+  border: none;
+  cursor: pointer;
+  font-size: 2rem;
+  font-family: var(--pandero-font);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.pandero-play-btn:active {
+  opacity: 0.75;
+}
+
+/* ---------------------------------------------------------------
+   Controls container — three sliders stacked vertically (D-09, D-10)
+--------------------------------------------------------------- */
+.pandero-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pandero-gap);
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------
+   Slider row — label+value above slider (D-11)
+--------------------------------------------------------------- */
+.pandero-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------
+   Slider header — label on left, live value on right (D-11)
+--------------------------------------------------------------- */
+.pandero-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--pandero-font);
+  font-size: var(--pandero-size-label);
+  color: var(--pandero-text);
+}
+
+/* ---------------------------------------------------------------
+   Live value display
+--------------------------------------------------------------- */
+.pandero-value {
+  font-size: var(--pandero-size-value);
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------------
+   Range slider base — full-width, 44px tap row height (UI-02)
+   background:transparent exposes the custom track styles below.
+--------------------------------------------------------------- */
+.pandero-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------
+   WebKit thumb — circular, 44px touch target (D-12, UI-02)
+   Visual size: 24px circle.
+   Hit area: 24px + 2×10px border = 44px total (border is transparent).
+--------------------------------------------------------------- */
+.pandero-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--pandero-accent);
+  border: 10px solid transparent;
+  box-sizing: content-box;
+  background-clip: padding-box;
+  margin-top: -20px;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------
+   WebKit track — thin 4px line, mid-ochre
+--------------------------------------------------------------- */
+.pandero-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--pandero-track);
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------
+   Firefox thumb — circular (D-12)
+   Cannot combine ::-moz-range-thumb with ::-webkit-slider-thumb.
+--------------------------------------------------------------- */
+.pandero-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--pandero-accent);
+  border: none;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------
+   Firefox track
+--------------------------------------------------------------- */
+.pandero-slider::-moz-range-track {
+  height: 4px;
+  background: var(--pandero-track);
+  border-radius: 2px;
+}
