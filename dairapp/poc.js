@@ -1,9 +1,8 @@
-// poc.js — Dairapp Phase 1 PoC: full audio pipeline
+// poc.js — Dairapp Phase 2 PoC: WSOLA-tuned audio pipeline with GainNode
 // Sources: @soundtouchjs/audio-worklet v1.0.8 README + processor source
 //          unmute-ios-audio v3.3.0 source
-//          MDN AudioBufferSourceNode, AudioContext
+//          MDN AudioBufferSourceNode, AudioContext, AudioWorkletNode
 
-import { SoundTouchNode } from '@soundtouchjs/audio-worklet';
 import unmuteAudio from 'unmute-ios-audio';
 
 // ENG-06: Call as early as possible, before any user gesture fires.
@@ -18,6 +17,7 @@ const mp3Promise = fetch('./pandero.mp3').then(r => r.arrayBuffer());
 // Module-level singletons — one AudioContext per widget (Safari cap: 4 per page).
 let audioCtx = null;
 let stNode = null;
+let gainNode = null;
 let source = null;
 let audioBuffer = null;
 let isInitialized = false;  // ENG-05 guard: AudioContext created only once, inside gesture
@@ -25,7 +25,8 @@ let isPlaying = false;
 
 // ---------------------------------------------------------------------------
 // init() — called exclusively inside play(), which is a click handler.
-// Creates the AudioContext and registers the SoundTouch worklet processor.
+// Creates the AudioContext, registers the SoundTouch worklet processor, and
+// creates the GainNode singleton that persists across play/restart cycles.
 // ENG-05: AudioContext MUST be created inside a user gesture.
 // ---------------------------------------------------------------------------
 async function init() {
@@ -38,18 +39,25 @@ async function init() {
   console.log('AudioContext state after creation:', audioCtx.state);
 
   // Register self-hosted worklet processor (cross-origin addModule() is blocked).
-  await SoundTouchNode.register(audioCtx, './soundtouch-processor.js');
+  await audioCtx.audioWorklet.addModule('./soundtouch-processor.js');
 
   // Decode the pre-fetched MP3 — now that AudioContext exists.
   const arrayBuffer = await mp3Promise;
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+  // GainNode created once in init() — persists across play() restarts.
+  // stNode connects to gainNode on each play(); gainNode routes to destination.
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 1.0;
+  gainNode.connect(audioCtx.destination);
 
   document.getElementById('status').textContent = 'Initialized — ready to play';
 }
 
 // ---------------------------------------------------------------------------
 // play() — starts (or restarts) playback from the beginning.
-// Creates a new AudioBufferSourceNode each call; source nodes are fire-and-forget.
+// Creates a new AudioBufferSourceNode and AudioWorkletNode each call;
+// source nodes are fire-and-forget (cannot be reused — Pitfall 6).
 // ---------------------------------------------------------------------------
 async function play() {
   await init();
@@ -59,14 +67,24 @@ async function play() {
     await audioCtx.resume();
   }
 
-  // Disconnect previous source node if one exists (cannot reuse — Pitfall 6).
-  if (source) {
-    source.disconnect();
-  }
+  // Disconnect previous nodes to prevent multiple stNodes feeding gainNode.
+  if (source) source.disconnect();
+  if (stNode) stNode.disconnect();
 
-  // Build audio graph: source → stNode → speakers.
-  stNode = new SoundTouchNode(audioCtx);
-  stNode.connect(audioCtx.destination);
+  // Build audio graph: source → stNode → gainNode → destination.
+  // Use raw AudioWorkletNode (not the library wrapper) to pass processorOptions.
+  // WSOLA params: sequenceMs=40, seekWindowMs=15, overlapMs=8 — tuned for percussion.
+  stNode = new AudioWorkletNode(audioCtx, 'soundtouch-processor', {
+    numberOfInputs: 1,
+    numberOfOutputs: 1,
+    outputChannelCount: [2],
+    processorOptions: {
+      sequenceMs: 40,
+      seekWindowMs: 15,
+      overlapMs: 8
+    }
+  });
+  stNode.connect(gainNode);
 
   source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
@@ -77,10 +95,10 @@ async function play() {
   const ratio = parseFloat(document.getElementById('tempo').value);
   source.playbackRate.value = ratio;
   source.connect(stNode);
-  stNode.playbackRate.value = ratio;  // processor divides pitch by this automatically
+  stNode.parameters.get('playbackRate').value = ratio;  // processor divides pitch by this automatically
 
   // ENG-03: Independent pitch shift in semitones (integer steps, -6 to +6 for this UI).
-  stNode.pitchSemitones.value = parseInt(document.getElementById('pitch').value);
+  stNode.parameters.get('pitchSemitones').value = parseInt(document.getElementById('pitch').value);
 
   source.start();
   isPlaying = true;
@@ -112,7 +130,7 @@ function handleTempoChange(e) {
   if (!source || !stNode) return;
   const ratio = parseFloat(e.target.value);
   source.playbackRate.value = ratio;   // feed samples at the new rate
-  stNode.playbackRate.value = ratio;   // processor compensates pitch automatically
+  stNode.parameters.get('playbackRate').value = ratio;   // processor compensates pitch automatically
   document.getElementById('tempo-val').textContent = ratio.toFixed(2);
 }
 
@@ -121,7 +139,7 @@ function handleTempoChange(e) {
 // ---------------------------------------------------------------------------
 function handlePitchChange(e) {
   if (!stNode) return;
-  stNode.pitchSemitones.value = parseInt(e.target.value);
+  stNode.parameters.get('pitchSemitones').value = parseInt(e.target.value);
   document.getElementById('pitch-val').textContent = e.target.value;
 }
 
