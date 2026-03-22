@@ -872,11 +872,20 @@ var SoundTouchProcessor = class extends AudioWorkletProcessor {
 	_pipe;
 	_samples;
 	_outputSamples;
-	constructor() {
-		super();
+	constructor(options) {
+		super(options);
 		this._pipe = new SoundTouch();
 		this._samples = new Float32Array(256);
 		this._outputSamples = new Float32Array(256);
+		const po = (options && options.processorOptions) || {};
+		if (po.sequenceMs || po.seekWindowMs || po.overlapMs) {
+			this._pipe.stretch.setParameters(
+				sampleRate,
+				po.sequenceMs   || 0,
+				po.seekWindowMs || 0,
+				po.overlapMs    || 8
+			);
+		}
 	}
 	process(inputs, outputs, parameters) {
 		const input = inputs[0];
