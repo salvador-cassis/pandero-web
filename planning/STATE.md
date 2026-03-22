@@ -25,8 +25,8 @@ See: planning/PROJECT.md (updated 2026-03-22)
 
 - Milestone: v1
 - Active phase: 03-mobile-polish-and-embedding
-- Current plan: 03-02 (task 1 complete, awaiting human-verify checkpoint at task 2)
-- Last session: Completed 03-02 Task 1 — pandero/player.js created (2026-03-22)
+- Current plan: 04-01 (phase 03 complete, ready for phase 04)
+- Last session: Completed 03-02 — human-verify approved, widget JS migration complete (2026-03-22)
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: planning/PROJECT.md (updated 2026-03-22)
 |-------|------|--------|-------|
 | 1 | Audio Engine Foundation | ◑ In Progress | 2/3 |
 | 2 | Playback Controls and Core UI | ○ Pending | 0/2 |
-| 3 | Mobile Polish and Embedding | ◑ In Progress | 0/2 |
+| 3 | Mobile Polish and Embedding | ● Complete | 2/2 |
 | 4 | Cueca-Specific UX Refinements | ○ Pending | 0/1 |
 
 ## Decisions
@@ -47,6 +47,9 @@ See: planning/PROJECT.md (updated 2026-03-22)
 - **01-02:** Pause/resume via audioCtx.suspend()/resume() — preserves loop position without source.stop()
 - [Phase 03-01]: Caveat v23 URL used instead of v18 — v18 URL redirects to HTML; current URL fetched from live Google Fonts API
 - [Phase 03-01]: CSS custom properties scoped to #pandero-player (not :root) to prevent token leakage into host page
+- [Phase 03-02]: Direct CDN URL (esm.sh) for unmute-ios-audio — host pages need no importmap (UI-03)
+- [Phase 03-02]: import.meta.url for MP3 and worklet addModule() — resolves relative to widget file, not host page
+- [Phase 03-02]: Reset button excluded from widget per D-13 — intentional scope reduction for embeddable widget
 
 ## Notes
 
@@ -56,7 +59,8 @@ See: planning/PROJECT.md (updated 2026-03-22)
 - `pandero/poc.js` complete — full audio pipeline verified on desktop (plan 01-02)
 - ENG-01, ENG-02, ENG-03, ENG-04 verified on desktop. ENG-06 pending real iOS hardware (plan 01-03)
 - `pandero/player.js` created — self-mounting ES module, programmatic DOM, pandero-* IDs, no importmap needed
-- Plan 03-02 task 1 complete; awaiting human browser verification at task 2 (human-verify checkpoint)
+- Plan 03-02 complete — human browser verification approved; widget plays, sliders update live, no console errors
+- Phase 3 complete — two-line embed contract fulfilled (div + script + CSS link)
 
 ---
-*Last updated: 2026-03-22 — plan 03-02 task 1 complete*
+*Last updated: 2026-03-22 — plan 03-02 complete, phase 03 complete*

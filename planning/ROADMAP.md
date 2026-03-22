@@ -59,7 +59,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Widget CSS and visual identity (self-hosted Caveat font, earthy palette with CSS custom properties, hexagon play button via clip-path with handmade perturbation, circular slider thumbs, 44px touch targets, mobile-first flexbox layout at 375px max-width)
-- [ ] 03-02-PLAN.md — Widget JS migration and embedding (migrate poc.js to player.js with programmatic DOM creation inside #pandero-player, pandero-* prefixed IDs, direct CDN URL for unmute-ios-audio eliminating importmap, reset button removed, import.meta.url for asset resolution)
+- [x] 03-02-PLAN.md — Widget JS migration and embedding (migrate poc.js to player.js with programmatic DOM creation inside #pandero-player, pandero-* prefixed IDs, direct CDN URL for unmute-ios-audio eliminating importmap, reset button removed, import.meta.url for asset resolution)
 
 ### Phase 4: Cueca-Specific UX Refinements
 **Goal**: The tool communicates from first load that it is built for cueca — the default tempo and vocabulary labels speak directly to the target community
@@ -82,7 +82,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 |-------|----------------|--------|-----------|
 | 1. Audio Engine Foundation | 2/3 | In Progress|  |
 | 2. Playback Controls and Core UI | 0/2 | Not started | - |
-| 3. Mobile Polish and Embedding | 0/2 | Not started | - |
+| 3. Mobile Polish and Embedding | 2/2 | Complete | 2026-03-22 |
 | 4. Cueca-Specific UX Refinements | 0/2 | Not started | - |
 
 ---
