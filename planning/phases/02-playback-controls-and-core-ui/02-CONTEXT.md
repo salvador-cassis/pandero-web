@@ -8,6 +8,8 @@
 
 Wire all table-stakes controls to the Phase 1 audio engine: play/pause toggle, tempo slider, pitch slider, volume slider, reset button, live BPM display, live semitone display. No visual polish — functional controls that work correctly on desktop and mobile touch.
 
+**Audio quality constraint (added pre-planning):** Phase 1 PoC was tested in browser and sounds robotic with audible artifacts. Phase 2 MUST resolve this — audio must sound natural, professional, and seamless across the full tempo/pitch range. Future v2 will add guitar (polyphonic), so parameter choices must account for that material too.
+
 </domain>
 
 <decisions>
@@ -41,6 +43,12 @@ Wire all table-stakes controls to the Phase 1 audio engine: play/pause toggle, t
 - **D-15:** Default volume = 1.0 (full). Range: 0.0–1.0, step 0.01
 - **D-16:** Wired to `gainNode.gain.value` directly (no AudioParam scheduling needed — direct assignment on input event)
 
+### SoundTouch WSOLA parameter tuning (non-negotiable requirement)
+- **D-17:** Default SoundTouch parameters produce robotic artifacts — tested on browser, confirmed unacceptable
+- **D-18:** Researcher MUST investigate optimal WSOLA parameters (`setSequenceLengthMs`, `setSeekWindowLengthMs`, `setOverlapLengthMs`) for percussion material (pandero)
+- **D-19:** Parameter choices must also account for future guitar (polyphonic) — don't over-optimize for percussion in a way that breaks polyphonic material
+- **D-20:** Goal: natural, professional, seamless audio across full tempo range (0.5×–1.5×) and pitch range (±6 semitones)
+
 ### Claude's Discretion
 - Exact HTML structure and element IDs
 - Whether to show a "%" label next to the volume slider
@@ -73,6 +81,10 @@ Wire all table-stakes controls to the Phase 1 audio engine: play/pause toggle, t
 ### Audio engine rules (non-negotiable)
 - `CLAUDE.md` §Critical Implementation Rules — tandem playbackRate pattern, single AudioContext per widget, suspend/resume for pause
 - `.planning/phases/01-audio-engine-foundation/01-CONTEXT.md` — Base BPM = 111, D-06 tandem pattern, D-07 suspend/resume
+
+### SoundTouch parameter research
+- `.planning/research/PITFALLS.md` — Browser audio pitfalls; check for SoundTouch artifact notes
+- `@soundtouchjs/audio-worklet` source / README — available WSOLA knobs and defaults
 
 </canonical_refs>
 
