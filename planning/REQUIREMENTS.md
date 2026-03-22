@@ -7,10 +7,10 @@
 
 ### Audio Engine
 
-- [ ] **ENG-01**: El pandero MP3 se carga y decodifica en el navegador sin servidor
-- [ ] **ENG-02**: El tempo puede modificarse de forma independiente al pitch (time-stretching real)
-- [ ] **ENG-03**: El pitch puede modificarse de forma independiente al tempo (pitch-shifting real)
-- [ ] **ENG-04**: El audio se reproduce en loop continuo automáticamente
+- [x] **ENG-01**: El pandero MP3 se carga y decodifica en el navegador sin servidor
+- [x] **ENG-02**: El tempo puede modificarse de forma independiente al pitch (time-stretching real)
+- [x] **ENG-03**: El pitch puede modificarse de forma independiente al tempo (pitch-shifting real)
+- [x] **ENG-04**: El audio se reproduce en loop continuo automáticamente
 - [x] **ENG-05**: El AudioContext se crea dentro de un gesto del usuario (política autoplay del browser)
 - [ ] **ENG-06**: El audio funciona en iOS aunque el switch de silencio esté activado
 
@@ -71,10 +71,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ENG-01 | Phase 1 | Pending |
-| ENG-02 | Phase 1 | Pending |
-| ENG-03 | Phase 1 | Pending |
-| ENG-04 | Phase 1 | Pending |
+| ENG-01 | Phase 1 | Complete |
+| ENG-02 | Phase 1 | Complete |
+| ENG-03 | Phase 1 | Complete |
+| ENG-04 | Phase 1 | Complete |
 | ENG-05 | Phase 1 | Complete |
 | ENG-06 | Phase 1 | Pending |
 | CTRL-01 | Phase 2 | Pending |
@@ -98,4 +98,4 @@
 
 ---
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 — VIS-03 removido (pandero es percusión, sin tonalidad)*
+*Last updated: 2026-03-22 — ENG-01, ENG-02, ENG-03, ENG-04 marked complete (plan 01-02, desktop smoke test passed)*
