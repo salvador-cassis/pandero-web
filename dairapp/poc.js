@@ -1,4 +1,4 @@
-// poc.js — Dairapp Phase 2 PoC: WSOLA-tuned audio pipeline with GainNode
+// poc.js — Dairapp Phase 2 PoC: WSOLA-tuned audio pipeline with GainNode and full controls
 // Sources: @soundtouchjs/audio-worklet v1.0.8 README + processor source
 //          unmute-ios-audio v3.3.0 source
 //          MDN AudioBufferSourceNode, AudioContext, AudioWorkletNode
@@ -24,7 +24,7 @@ let isInitialized = false;  // ENG-05 guard: AudioContext created only once, ins
 let isPlaying = false;
 
 // ---------------------------------------------------------------------------
-// init() — called exclusively inside play(), which is a click handler.
+// init() — called exclusively inside togglePlayback(), which is a click handler.
 // Creates the AudioContext, registers the SoundTouch worklet processor, and
 // creates the GainNode singleton that persists across play/restart cycles.
 // ENG-05: AudioContext MUST be created inside a user gesture.
@@ -45,28 +45,19 @@ async function init() {
   const arrayBuffer = await mp3Promise;
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-  // GainNode created once in init() — persists across play() restarts.
-  // stNode connects to gainNode on each play(); gainNode routes to destination.
+  // GainNode created once in init() — persists across startPlayback() restarts.
+  // stNode connects to gainNode on each startPlayback(); gainNode routes to destination.
   gainNode = audioCtx.createGain();
   gainNode.gain.value = 1.0;
   gainNode.connect(audioCtx.destination);
-
-  document.getElementById('status').textContent = 'Initialized — ready to play';
 }
 
 // ---------------------------------------------------------------------------
-// play() — starts (or restarts) playback from the beginning.
+// startPlayback() — internal: starts (or restarts) playback from the beginning.
 // Creates a new AudioBufferSourceNode and AudioWorkletNode each call;
 // source nodes are fire-and-forget (cannot be reused — Pitfall 6).
 // ---------------------------------------------------------------------------
-async function play() {
-  await init();
-
-  // Resume if suspended (autoplay policy) or interrupted (iOS screen lock — Pitfall 2).
-  if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
-    await audioCtx.resume();
-  }
-
+async function startPlayback() {
   // Disconnect previous nodes to prevent multiple stNodes feeding gainNode.
   if (source) source.disconnect();
   if (stNode) stNode.disconnect();
@@ -101,52 +92,119 @@ async function play() {
   stNode.parameters.get('pitchSemitones').value = parseInt(document.getElementById('pitch').value);
 
   source.start();
-  isPlaying = true;
-
-  document.getElementById('status').textContent = 'Playing';
-  document.getElementById('pause-btn').disabled = false;
-  document.getElementById('play-btn').textContent = 'Restart';
 }
 
 // ---------------------------------------------------------------------------
-// pause() — suspends the AudioContext (preserves playback position).
-// NEVER calls source.stop() — that makes the node unusable (Pitfall 6).
+// togglePlayback() — click handler for toggle-btn.
+// First click: initializes AudioContext, starts playback, shows pause icon.
+// Subsequent clicks while playing: restart from beginning (D-04), stays pause icon.
+// Click when paused: resumes playback, shows pause icon.
 // ---------------------------------------------------------------------------
-async function pause() {
+async function togglePlayback() {
+  const btn = document.getElementById('toggle-btn');
+
+  if (!isInitialized) {
+    btn.disabled = true;
+    document.getElementById('status').textContent = 'Cargando...';
+    await init();
+    btn.disabled = false;
+    document.getElementById('status').textContent = '';
+  }
+
+  if (!isPlaying) {
+    await audioCtx.resume();
+    await startPlayback();
+    isPlaying = true;
+    btn.textContent = '\u23F8';  // ⏸ pause icon
+  } else {
+    // D-04: click while playing = restart from beginning (not pause)
+    await startPlayback();
+    // isPlaying stays true, button stays pause icon
+  }
+}
+
+// ---------------------------------------------------------------------------
+// pausePlayback() — suspends the AudioContext (preserves playback position).
+// NEVER calls source.stop() — that makes the node unusable (Pitfall 6).
+// Triggered by Space key (keyboard handler below). No visible pause button.
+// ---------------------------------------------------------------------------
+async function pausePlayback() {
   if (!audioCtx || !isPlaying) return;
 
   await audioCtx.suspend();
   isPlaying = false;
 
-  document.getElementById('status').textContent = 'Paused';
-  document.getElementById('pause-btn').disabled = true;
-  document.getElementById('play-btn').textContent = 'Resume';
+  document.getElementById('toggle-btn').textContent = '\u25B6';  // ▶ play icon
+  document.getElementById('status').textContent = '';
 }
 
 // ---------------------------------------------------------------------------
-// Tempo slider — ENG-02: tandem pattern (both nodes, same ratio).
+// handleTempoChange — ENG-02: tandem pattern (both nodes, same ratio).
+// Display updates always (even before first play). AudioParam updates only when playing.
+// VIS-01, D-10, D-12: show BPM as integer (Math.round(ratio * 111)).
 // ---------------------------------------------------------------------------
 function handleTempoChange(e) {
-  if (!source || !stNode) return;
   const ratio = parseFloat(e.target.value);
-  source.playbackRate.value = ratio;   // feed samples at the new rate
-  stNode.parameters.get('playbackRate').value = ratio;   // processor compensates pitch automatically
-  document.getElementById('tempo-val').textContent = ratio.toFixed(2);
+  document.getElementById('tempo-val').textContent = Math.round(ratio * 111);
+  if (!source || !stNode) return;
+  source.playbackRate.value = ratio;
+  stNode.parameters.get('playbackRate').value = ratio;
 }
 
 // ---------------------------------------------------------------------------
-// Pitch slider — ENG-03: independent semitone shift.
+// handlePitchChange — ENG-03: independent semitone shift.
+// VIS-02, D-13: signed display (0, +N, -N).
 // ---------------------------------------------------------------------------
 function handlePitchChange(e) {
+  const n = parseInt(e.target.value);
+  document.getElementById('pitch-val').textContent = n === 0 ? '0' : (n > 0 ? '+' + n : '' + n);
   if (!stNode) return;
-  stNode.parameters.get('pitchSemitones').value = parseInt(e.target.value);
-  document.getElementById('pitch-val').textContent = e.target.value;
+  stNode.parameters.get('pitchSemitones').value = n;
+}
+
+// ---------------------------------------------------------------------------
+// handleVolumeChange — CTRL-04, D-15, D-16: volume via GainNode.
+// gainNode persists across restarts so volume is preserved.
+// ---------------------------------------------------------------------------
+function handleVolumeChange(e) {
+  if (!gainNode) return;
+  gainNode.gain.value = parseFloat(e.target.value);
+}
+
+// ---------------------------------------------------------------------------
+// handleReset — CTRL-05, D-07, D-08, D-09: reset tempo and pitch only.
+// Volume is NOT reset (D-08). Applies live AudioParam updates when playing.
+// ---------------------------------------------------------------------------
+function handleReset() {
+  document.getElementById('tempo').value = 1.0;
+  document.getElementById('pitch').value = 0;
+  document.getElementById('tempo-val').textContent = '111';
+  document.getElementById('pitch-val').textContent = '0';
+  if (source && stNode) {
+    source.playbackRate.value = 1.0;
+    stNode.parameters.get('playbackRate').value = 1.0;
+    stNode.parameters.get('pitchSemitones').value = 0;
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Event wiring
 // ---------------------------------------------------------------------------
-document.getElementById('play-btn').addEventListener('click', play);
-document.getElementById('pause-btn').addEventListener('click', pause);
+document.getElementById('toggle-btn').addEventListener('click', togglePlayback);
 document.getElementById('tempo').addEventListener('input', handleTempoChange);
 document.getElementById('pitch').addEventListener('input', handlePitchChange);
+document.getElementById('volume').addEventListener('input', handleVolumeChange);
+document.getElementById('reset-btn').addEventListener('click', handleReset);
+
+// Space key: pause when playing, resume/play when paused.
+// Gives the musician a way to pause without a dedicated pause button.
+document.addEventListener('keydown', async (e) => {
+  if (e.code === 'Space' && isInitialized) {
+    e.preventDefault();
+    if (isPlaying) {
+      await pausePlayback();
+    } else {
+      await togglePlayback();
+    }
+  }
+});
