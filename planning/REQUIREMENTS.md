@@ -1,4 +1,4 @@
-# Requirements: Dairapp Web
+# Requirements: Pandero Web
 
 **Defined:** 2026-03-22
 **Core Value:** El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte al otro, para practicar cueca en cualquier nivel y contexto.

@@ -1,7 +1,7 @@
 # Architecture Patterns
 
 **Domain:** Browser-based audio player with real-time, independent pitch and tempo control
-**Project:** Dairapp Web — Backing Track Interactivo para Cueca Chilena
+**Project:** Pandero Web — Backing Track Interactivo para Cueca Chilena
 **Researched:** 2026-03-22
 **Confidence:** HIGH (Web Audio API) / MEDIUM (library-specific integration details)
 
@@ -188,7 +188,7 @@ The widget must integrate into an existing HTML/JS site with zero build tooling.
 ```
 /your-website/
   ├── index.html           (existing page)
-  ├── dairapp/
+  ├── pandero/
   │   ├── player.js        (widget — all logic)
   │   ├── player.css       (scoped styles)
   │   ├── pandero.mp3      (the fixed audio asset)
@@ -198,15 +198,15 @@ The widget must integrate into an existing HTML/JS site with zero build tooling.
 The host page includes the widget with two lines:
 
 ```html
-<link rel="stylesheet" href="/dairapp/player.css">
-<div id="dairapp-player"></div>
-<script src="/dairapp/player.js"></script>
+<link rel="stylesheet" href="/pandero/player.css">
+<div id="pandero-player"></div>
+<script src="/pandero/player.js"></script>
 ```
 
-`player.js` self-initializes: it finds `#dairapp-player`, injects its DOM, and registers event listeners. It loads the processor with a relative path:
+`player.js` self-initializes: it finds `#pandero-player`, injects its DOM, and registers event listeners. It loads the processor with a relative path:
 
 ```js
-await audioContext.audioWorklet.addModule('/dairapp/soundtouch-processor.js');
+await audioContext.audioWorklet.addModule('/pandero/soundtouch-processor.js');
 ```
 
 **Why not a Blob URL for the processor?**
@@ -217,7 +217,7 @@ A Blob URL approach (inlining the processor code as a string and converting to `
 
 **Single AudioContext rule:** The widget must not create multiple `AudioContext` instances. Safari enforces a maximum of 4 per page. Use a module-scoped singleton variable.
 
-**Namespace isolation:** The widget must not pollute the host page's global scope. Wrap all logic in an IIFE or use a `<script type="module">`. If `type="module"` is used, note that it defers execution — the widget must handle cases where `#dairapp-player` may not exist at parse time.
+**Namespace isolation:** The widget must not pollute the host page's global scope. Wrap all logic in an IIFE or use a `<script type="module">`. If `type="module"` is used, note that it defers execution — the widget must handle cases where `#pandero-player` may not exist at parse time.
 
 ---
 

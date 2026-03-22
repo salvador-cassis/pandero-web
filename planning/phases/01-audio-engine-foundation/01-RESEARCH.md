@@ -49,7 +49,7 @@ The entire technical risk of the project lives in this phase. If the AudioWorkle
 
 **Key findings from phase-specific investigation:** The `@soundtouchjs/audio-worklet` v1.0.8 package ships four dist files. The main-thread API (`SoundTouchNode`) uses relative imports between them — it cannot be used as a single CDN file drop-in. The processor file (`soundtouch-processor.js`) IS fully self-contained (no imports). The recommended delivery is: esm.sh for the main-thread module via importmap, plus a manually copied `soundtouch-processor.js` served locally. The `unmute-ios-audio` v3.3.0 package is CommonJS but is available on esm.sh as an ESM default export. The `pandero.mp3` file is already in the repo root at 52KB / ~6.6s — extremely short, will decode to ~2.2MB PCM (well within mobile limits), and looping will be seamless with `loop = true`.
 
-**Primary recommendation:** Use importmap + esm.sh for the main-thread module import, copy `soundtouch-processor.js` from the npm package into `dairapp/`, and call `unmuteAudio()` once at the top of the module. Run dev with `python3 -m http.server`. Test on a real iPhone early.
+**Primary recommendation:** Use importmap + esm.sh for the main-thread module import, copy `soundtouch-processor.js` from the npm package into `pandero/`, and call `unmuteAudio()` once at the top of the module. Run dev with `python3 -m http.server`. Test on a real iPhone early.
 
 ---
 
@@ -83,7 +83,7 @@ The entire technical risk of the project lives in this phase. If the AudioWorkle
 ```bash
 npm install @soundtouchjs/audio-worklet@1.0.8 unmute-ios-audio@3.3.0
 # Then copy:
-cp node_modules/@soundtouchjs/audio-worklet/dist/soundtouch-processor.js dairapp/
+cp node_modules/@soundtouchjs/audio-worklet/dist/soundtouch-processor.js pandero/
 ```
 
 **Version verification:** Verified March 22, 2026 against npm registry.
@@ -100,8 +100,8 @@ cp node_modules/@soundtouchjs/audio-worklet/dist/soundtouch-processor.js dairapp
 ```
 project-root/
 ├── index.html              (host page — includes the widget)
-├── pandero.mp3             (existing — move to dairapp/ during Phase 1)
-└── dairapp/
+├── pandero.mp3             (existing — move to pandero/ during Phase 1)
+└── pandero/
     ├── poc.html            (Phase 1 PoC — standalone proof-of-concept)
     ├── player.js           (Phase 2+ widget)
     ├── soundtouch-processor.js   (copied from npm dist; must be same-origin)
@@ -131,7 +131,7 @@ For Phase 1, a single self-contained `poc.html` file is sufficient — no separa
 
 The processor file `soundtouch-processor.js` must be served locally — it is passed as a URL string to `SoundTouchNode.register()`, which calls `audioWorklet.addModule()`. Cross-origin loading of worklet modules is blocked by browsers.
 
-**Processor delivery:** Copy `soundtouch-processor.js` from the npm package (or download the dist tarball) and place it in the `dairapp/` directory. It is a fully self-contained 24KB file — no runtime imports, `@soundtouchjs/core` is bundled inline.
+**Processor delivery:** Copy `soundtouch-processor.js` from the npm package (or download the dist tarball) and place it in the `pandero/` directory. It is a fully self-contained 24KB file — no runtime imports, `@soundtouchjs/core` is bundled inline.
 
 ### Pattern 2: Full Initialization Sequence
 
@@ -392,7 +392,7 @@ Never use `stNode.tempo.value` in the tandem pattern — it serves a different u
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dairapp PoC — Phase 1</title>
+  <title>Pandero PoC — Phase 1</title>
   <script type="importmap">
   {
     "imports": {
@@ -502,11 +502,11 @@ document.getElementById('pitch').addEventListener('input', (e) => {
 # One-time setup: get the processor file
 # Option A: minimal npm (recommended — most reproducible)
 npm install @soundtouchjs/audio-worklet@1.0.8
-cp node_modules/@soundtouchjs/audio-worklet/dist/soundtouch-processor.js dairapp/
+cp node_modules/@soundtouchjs/audio-worklet/dist/soundtouch-processor.js pandero/
 
 # Option B: download tarball directly without npm
 curl -L https://registry.npmjs.org/@soundtouchjs/audio-worklet/-/audio-worklet-1.0.8.tgz | \
-  tar -xzO package/dist/soundtouch-processor.js > dairapp/soundtouch-processor.js
+  tar -xzO package/dist/soundtouch-processor.js > pandero/soundtouch-processor.js
 ```
 
 The `soundtouch-processor.js` file is 24KB, fully self-contained, and has zero runtime imports. It bundles `@soundtouchjs/core` inline.
@@ -538,7 +538,7 @@ stNode.playbackRate.value    // default 1.0, range 0.25–4.0 (USED in tandem pa
 ## Audio Asset Notes
 
 **pandero.mp3 (verified 2026-03-22):**
-- Location: project root (move to `dairapp/pandero.mp3` in Phase 1 scaffold)
+- Location: project root (move to `pandero/pandero.mp3` in Phase 1 scaffold)
 - Format: MPEG Layer III, 64 kbps, 44.1 kHz, Stereo, ID3 v2.4
 - File size: 52KB compressed
 - Duration: ~6.6 seconds (CBR estimate at 64kbps)

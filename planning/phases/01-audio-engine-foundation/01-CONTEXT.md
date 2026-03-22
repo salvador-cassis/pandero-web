@@ -64,13 +64,13 @@ Proof-of-concept page: load `pandero.mp3`, initialize `@soundtouchjs/audio-workl
 ## Existing Code Insights
 
 ### Reusable Assets
-- `pandero.mp3` — Already at project root. Move to `dairapp/pandero.mp3` during scaffold.
+- `pandero.mp3` — Already at project root. Move to `pandero/pandero.mp3` during scaffold.
 
 ### Established Patterns
 - None yet — greenfield project
 
 ### Integration Points
-- Phase 1 output (`dairapp/` directory with `player.js` + `soundtouch-processor.js`) becomes the foundation for Phase 2 UI controls
+- Phase 1 output (`pandero/` directory with `player.js` + `soundtouch-processor.js`) becomes the foundation for Phase 2 UI controls
 
 </code_context>
 

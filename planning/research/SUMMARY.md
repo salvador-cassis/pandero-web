@@ -1,13 +1,13 @@
 # Project Research Summary
 
-**Project:** Dairapp Web — Backing Track Interactivo para Cueca Chilena
+**Project:** Pandero Web — Backing Track Interactivo para Cueca Chilena
 **Domain:** Browser-based real-time audio time-stretching / music practice tool
 **Researched:** 2026-03-22
 **Confidence:** HIGH
 
 ## Executive Summary
 
-Dairapp Web is a narrowly scoped, single-instrument browser tool: play a fixed pandero MP3 with independent pitch and tempo control. The technical core — real-time time-stretching in the browser — is solved by one library choice: `@soundtouchjs/audio-worklet` v1.0.8. This is the recommended engine. It runs off the main thread via AudioWorklet, handles independent pitch and tempo control through `pitchSemitones` and `tempo` AudioParams, requires no WASM binary and no build system, and is actively maintained (released March 18, 2026). Everything else in the stack is native Web API: `fetch()` + `decodeAudioData()` for audio loading, `AudioBufferSourceNode` for playback, and plain HTML/CSS for the UI. No framework, no server, no backend.
+Pandero Web is a narrowly scoped, single-instrument browser tool: play a fixed pandero MP3 with independent pitch and tempo control. The technical core — real-time time-stretching in the browser — is solved by one library choice: `@soundtouchjs/audio-worklet` v1.0.8. This is the recommended engine. It runs off the main thread via AudioWorklet, handles independent pitch and tempo control through `pitchSemitones` and `tempo` AudioParams, requires no WASM binary and no build system, and is actively maintained (released March 18, 2026). Everything else in the stack is native Web API: `fetch()` + `decodeAudioData()` for audio loading, `AudioBufferSourceNode` for playback, and plain HTML/CSS for the UI. No framework, no server, no backend.
 
 The recommended approach is a flat three-layer architecture: an Asset Loader (pre-fetches the MP3 on page load, decodes it on first play), an Audio Graph (wires nodes on the main thread), and the AudioWorklet processor thread (runs SoundTouch processing with zero main-thread pressure). The widget embeds into the existing HTML page as two files: `player.js` (all logic) and `soundtouch-processor.js` (the worklet, self-hosted from the same origin). Feature scope for v1 is intentionally minimal: play/pause, loop, tempo slider, pitch slider, volume slider, BPM/semitone display, reset button, responsive layout.
 
@@ -131,7 +131,7 @@ The dependency chain dictates a clear phase structure. The time-stretching engin
 
 **Rationale:** The tool is designed for mobile use on music stands and for embedding in an existing HTML site. Both require explicit attention that goes beyond "it works on desktop." Responsive layout, touch target sizing, iOS-specific testing, and clean embedding integration are the deliverables.
 
-**Delivers:** Embeddable widget file structure (`dairapp/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`); verified responsive layout; large touch targets; two-line host page integration; confirmed iOS behavior on real hardware with mute switch testing.
+**Delivers:** Embeddable widget file structure (`pandero/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`); verified responsive layout; large touch targets; two-line host page integration; confirmed iOS behavior on real hardware with mute switch testing.
 
 **Addresses:** Responsive/mobile-usable UI, embeddable with minimal footprint
 

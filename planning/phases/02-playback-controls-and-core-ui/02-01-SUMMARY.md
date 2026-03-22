@@ -6,9 +6,9 @@ completed: 2026-03-22
 key-files:
   created: []
   modified:
-    - dairapp/soundtouch-processor.js
-    - dairapp/poc.js
-    - dairapp/poc.html
+    - pandero/soundtouch-processor.js
+    - pandero/poc.js
+    - pandero/poc.html
 ---
 
 ## What Was Built

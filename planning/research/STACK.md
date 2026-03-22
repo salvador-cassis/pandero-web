@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Project:** Dairapp Web — Browser-based independent pitch/tempo control for cueca chilena backing tracks
+**Project:** Pandero Web — Browser-based independent pitch/tempo control for cueca chilena backing tracks
 **Researched:** 2026-03-22
 
 ---

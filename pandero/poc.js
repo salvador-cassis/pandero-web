@@ -1,4 +1,4 @@
-// poc.js — Dairapp Phase 2 PoC: WSOLA-tuned audio pipeline with GainNode and full controls
+// poc.js — Pandero Phase 2 PoC: WSOLA-tuned audio pipeline with GainNode and full controls
 // Sources: @soundtouchjs/audio-worklet v1.0.8 README + processor source
 //          unmute-ios-audio v3.3.0 source
 //          MDN AudioBufferSourceNode, AudioContext, AudioWorkletNode

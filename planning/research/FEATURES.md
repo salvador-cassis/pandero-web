@@ -1,7 +1,7 @@
 # Feature Landscape
 
 **Domain:** Interactive backing track / music practice tool (folk music, single fixed instrument, web)
-**Project:** Dairapp Web — Cueca Chilena Pandero
+**Project:** Pandero Web — Cueca Chilena Pandero
 **Researched:** 2026-03-22
 **Confidence:** HIGH for table stakes (multiple converging sources); MEDIUM for differentiators (community-specific, less external data)
 

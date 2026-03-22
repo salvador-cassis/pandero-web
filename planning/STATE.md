@@ -47,10 +47,10 @@ See: planning/PROJECT.md (updated 2026-03-22)
 
 ## Notes
 
-- Pandero MP3 moved from project root to `dairapp/pandero.mp3` (plan 01-01)
+- Pandero MP3 moved from project root to `pandero/pandero.mp3` (plan 01-01)
 - El pandero es percusión sin tonalidad — el pitch slider muestra semitonos, no nombre de nota (VIS-03 eliminado)
-- `dairapp/` scaffold complete — poc.html, soundtouch-processor.js, pandero.mp3 all in place
-- `dairapp/poc.js` complete — full audio pipeline verified on desktop (plan 01-02)
+- `pandero/` scaffold complete — poc.html, soundtouch-processor.js, pandero.mp3 all in place
+- `pandero/poc.js` complete — full audio pipeline verified on desktop (plan 01-02)
 - ENG-01, ENG-02, ENG-03, ENG-04 verified on desktop. ENG-06 pending real iOS hardware (plan 01-03)
 
 ---

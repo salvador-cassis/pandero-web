@@ -7,9 +7,9 @@ tags: [audio, audioworklet, soundtouchjs, importmap, esm.sh, html]
 # Dependency graph
 requires: []
 provides:
-  - dairapp/ directory scaffold with same-origin serving layout
+  - pandero/ directory scaffold with same-origin serving layout
   - soundtouch-processor.js self-hosted AudioWorklet processor (24KB, zero imports)
-  - pandero.mp3 moved to dairapp/ (same origin as poc.html)
+  - pandero.mp3 moved to pandero/ (same origin as poc.html)
   - poc.html shell with importmap, isSecureContext guard, play/pause UI, and sliders
 affects: [01-02, 01-03, 02-01, 02-02]
 
@@ -25,9 +25,9 @@ tech-stack:
 
 key-files:
   created:
-    - dairapp/poc.html
-    - dairapp/soundtouch-processor.js
-    - dairapp/pandero.mp3
+    - pandero/poc.html
+    - pandero/soundtouch-processor.js
+    - pandero/pandero.mp3
   modified: []
 
 key-decisions:
@@ -39,7 +39,7 @@ key-decisions:
 
 patterns-established:
   - "Pattern: soundtouch-processor.js must be same-origin — never load from CDN in addModule()"
-  - "Pattern: Always serve dairapp/ via localhost, never file:// (AudioWorklet requires Secure Context)"
+  - "Pattern: Always serve pandero/ via localhost, never file:// (AudioWorklet requires Secure Context)"
 
 requirements-completed: [ENG-05]
 
@@ -50,7 +50,7 @@ completed: 2026-03-22
 
 # Phase 1 Plan 1: Project Scaffold Summary
 
-**Self-hosted AudioWorklet scaffold with importmap delivery — dairapp/ directory, 24KB processor, 52KB pandero.mp3, and poc.html shell ready for localhost serving**
+**Self-hosted AudioWorklet scaffold with importmap delivery — pandero/ directory, 24KB processor, 52KB pandero.mp3, and poc.html shell ready for localhost serving**
 
 ## Performance
 
@@ -62,25 +62,25 @@ completed: 2026-03-22
 
 ## Accomplishments
 
-- Created `dairapp/` directory with all three required static assets in place
+- Created `pandero/` directory with all three required static assets in place
 - Downloaded `soundtouch-processor.js` (931 lines, 24KB) from npm tarball via curl — self-contained, zero imports, bundles @soundtouchjs/core inline
-- Moved `pandero.mp3` from project root to `dairapp/` so it is same-origin with `poc.html`
+- Moved `pandero.mp3` from project root to `pandero/` so it is same-origin with `poc.html`
 - Created `poc.html` shell with importmap (both esm.sh URLs), isSecureContext guard, play/pause buttons, tempo and pitch sliders, and module script tag pointing to `poc.js`
 
 ## Task Commits
 
 Each task was committed atomically:
 
-1. **Task 1: Create dairapp/ dir, copy processor, move pandero.mp3** - `c394492` (chore)
+1. **Task 1: Create pandero/ dir, copy processor, move pandero.mp3** - `c394492` (chore)
 2. **Task 2: Write poc.html shell with importmap and isSecureContext guard** - `a55990d` (feat)
 
 **Plan metadata:** (docs commit follows)
 
 ## Files Created/Modified
 
-- `dairapp/soundtouch-processor.js` - Self-hosted AudioWorklet processor, 24KB, 931 lines, zero top-level imports (obtained from npm tarball via curl)
-- `dairapp/pandero.mp3` - Fixed audio asset moved from project root; 52KB, ~6.6s, stereo 44.1kHz
-- `dairapp/poc.html` - PoC shell page: importmap with @soundtouchjs/audio-worklet and unmute-ios-audio via esm.sh, isSecureContext guard, Play/Pause buttons, tempo and pitch range sliders, module script tag for poc.js
+- `pandero/soundtouch-processor.js` - Self-hosted AudioWorklet processor, 24KB, 931 lines, zero top-level imports (obtained from npm tarball via curl)
+- `pandero/pandero.mp3` - Fixed audio asset moved from project root; 52KB, ~6.6s, stereo 44.1kHz
+- `pandero/poc.html` - PoC shell page: importmap with @soundtouchjs/audio-worklet and unmute-ios-audio via esm.sh, isSecureContext guard, Play/Pause buttons, tempo and pitch range sliders, module script tag for poc.js
 
 ## Decisions Made
 
@@ -103,16 +103,16 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-- All static assets are in place in `dairapp/`
+- All static assets are in place in `pandero/`
 - `poc.html` is ready to serve from `python3 -m http.server 8000`
 - Plan 01-02 can now write `poc.js` and reference `./soundtouch-processor.js` and `./pandero.mp3` as relative same-origin paths
 - No blockers
 
 ## Self-Check: PASSED
 
-- FOUND: dairapp/poc.html
-- FOUND: dairapp/soundtouch-processor.js
-- FOUND: dairapp/pandero.mp3
+- FOUND: pandero/poc.html
+- FOUND: pandero/soundtouch-processor.js
+- FOUND: pandero/pandero.mp3
 - FOUND: 01-01-SUMMARY.md
 - FOUND commit: c394492 (Task 1)
 - FOUND commit: a55990d (Task 2)

@@ -1,4 +1,4 @@
-# Roadmap: Dairapp Web
+# Roadmap: Pandero Web
 
 ## Overview
 
@@ -53,13 +53,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The widget layout is fully usable on a 375px-wide screen (iPhone SE) without horizontal scrolling or overlapping elements
   2. All interactive controls (sliders, play/pause, reset) have touch targets of at least 44×44px and respond correctly to finger input
-  3. Adding `<div id="dairapp-player"></div>` and `<script src="dairapp/player.js" type="module"></script>` to any HTML page mounts the widget with no further configuration
+  3. Adding `<div id="pandero-player"></div>` and `<script src="pandero/player.js" type="module"></script>` to any HTML page mounts the widget with no further configuration
   4. The widget's CSS and JS do not leak into or conflict with the host page's existing styles or global scope
 **Plans**: 2 plans
 
 Plans:
 - [ ] 03-01: Responsive layout and touch targets (mobile-first CSS, minimum 44×44px touch targets on all controls, slider thumb sizing, layout verified at 375px / 768px / 1280px breakpoints)
-- [ ] 03-02: Widget file structure and isolation (`dairapp/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`; IIFE or ES module scope isolation; scoped CSS selectors prefixed `dairapp-`; auto-mount from `div#dairapp-player`; two-line embed verified in a real host page)
+- [ ] 03-02: Widget file structure and isolation (`pandero/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`; IIFE or ES module scope isolation; scoped CSS selectors prefixed `pandero-`; auto-mount from `div#pandero-player`; two-line embed verified in a real host page)
 
 ### Phase 4: Cueca-Specific UX Refinements
 **Goal**: The tool communicates from first load that it is built for cueca — the default tempo and vocabulary labels speak directly to the target community
@@ -123,7 +123,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 - **AudioContext creation**: Always inside a user gesture handler, never on page load. Handle `'interrupted'` state (iOS screen lock / backgrounding).
 - **Self-hosted worklet**: `soundtouch-processor.js` must be served from the same origin as `player.js`. `addModule()` is blocked cross-origin.
 - **Development server**: AudioWorklet requires a Secure Context. Always run `npx serve .` or `python3 -m http.server` — never open `file://` directly. Check `window.isSecureContext` during init.
-- **Pandero MP3**: already at project root `pandero.mp3` — move to `dairapp/pandero.mp3` during Phase 1 scaffold.
+- **Pandero MP3**: already at project root `pandero.mp3` — move to `pandero/pandero.mp3` during Phase 1 scaffold.
 - **Pandero base BPM**: 111 BPM, time signature 3/4 — 6/8. Use as denominator for all tempo ratio → BPM display calculations.
 
 ---

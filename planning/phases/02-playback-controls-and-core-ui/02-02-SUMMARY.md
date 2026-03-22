@@ -6,8 +6,8 @@ completed: 2026-03-22
 key-files:
   created: []
   modified:
-    - dairapp/poc.js
-    - dairapp/poc.html
+    - pandero/poc.js
+    - pandero/poc.html
 ---
 
 ## What Was Built

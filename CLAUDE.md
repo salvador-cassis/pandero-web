@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Dairapp Web is an embeddable backing track widget for practicing cueca chilena. It plays a fixed pandero MP3 with independent pitch and tempo control (no framework, no server, no build step). The widget drops into any existing HTML page with two lines.
+Pandero Web is an embeddable backing track widget for practicing cueca chilena. It plays a fixed pandero MP3 with independent pitch and tempo control (no framework, no server, no build step). The widget drops into any existing HTML page with two lines.
 
 **Current state:** Pre-code. Phase 1 (Audio Engine Foundation) not yet started. All technical decisions are documented in `planning/`.
 
@@ -40,7 +40,7 @@ HOST PAGE
 ## File Layout (target after Phase 1)
 
 ```
-dairapp/
+pandero/
   player.js                  # widget logic (Phase 2+)
   player.css                 # scoped styles (Phase 3)
   poc.js                     # Phase 1 PoC only
@@ -78,12 +78,12 @@ SoundTouch corrects pitch only; the source node feeds samples at the right rate.
 ## Embedding Contract (Phase 3 target)
 
 ```html
-<link rel="stylesheet" href="/dairapp/player.css">
-<div id="dairapp-player"></div>
-<script src="/dairapp/player.js"></script>
+<link rel="stylesheet" href="/pandero/player.css">
+<div id="pandero-player"></div>
+<script src="/pandero/player.js"></script>
 ```
 
-`player.js` self-initializes on `#dairapp-player`. All CSS selectors prefixed `dairapp-`. No global scope pollution (IIFE or ES module).
+`player.js` self-initializes on `#pandero-player`. All CSS selectors prefixed `pandero-`. No global scope pollution (IIFE or ES module).
 
 ## Planning Documents
 

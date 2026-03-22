@@ -27,8 +27,8 @@ ENG-06 (iOS mute switch) is **deferred**. The code is correctly written to handl
 
 ## Key Files
 
-- `dairapp/poc.js` — iOS-compliant, no changes needed
-- `dairapp/poc.html` — LAN hint NOT added (skipped with the deferral)
+- `pandero/poc.js` — iOS-compliant, no changes needed
+- `pandero/poc.html` — LAN hint NOT added (skipped with the deferral)
 
 ## Deviations
 

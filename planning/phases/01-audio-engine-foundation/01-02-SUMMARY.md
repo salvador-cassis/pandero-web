@@ -6,9 +6,9 @@ tags: [audio, audioworklet, soundtouchjs, pitch, tempo, loop, poc]
 
 # Dependency graph
 requires:
-  - 01-01 (dairapp/ scaffold, poc.html, soundtouch-processor.js, pandero.mp3)
+  - 01-01 (pandero/ scaffold, poc.html, soundtouch-processor.js, pandero.mp3)
 provides:
-  - dairapp/poc.js — full audio pipeline verified working on desktop Chrome/Safari
+  - pandero/poc.js — full audio pipeline verified working on desktop Chrome/Safari
   - Tandem playbackRate pattern verified producing no gap artifacts at >1.0x
   - pitchSemitones verified as independent of tempo
   - source.loop = true verified as seamless across the 6.6s boundary
@@ -26,7 +26,7 @@ tech-stack:
 
 key-files:
   created:
-    - dairapp/poc.js
+    - pandero/poc.js
   modified: []
 
 key-decisions:
@@ -56,7 +56,7 @@ completed: 2026-03-22
 
 ## Accomplishments
 
-- Created `dairapp/poc.js` (134 lines) implementing the complete audio pipeline as an ES module
+- Created `pandero/poc.js` (134 lines) implementing the complete audio pipeline as an ES module
 - Verified MP3 fetch + decode pipeline (ENG-01): pandero.mp3 loads via pre-fetch, decoded inside click handler
 - Verified tandem playbackRate pattern (ENG-02): tempo slider changes speed with no gap artifacts
 - Verified independent pitch control via pitchSemitones (ENG-03): pitch shifts without affecting tempo
@@ -71,7 +71,7 @@ completed: 2026-03-22
 
 ## Files Created/Modified
 
-- `dairapp/poc.js` — 134-line ES module: imports SoundTouchNode + unmuteAudio, pre-fetches MP3, implements init/play/pause, tandem tempo handler, pitch handler, and event wiring
+- `pandero/poc.js` — 134-line ES module: imports SoundTouchNode + unmuteAudio, pre-fetches MP3, implements init/play/pause, tandem tempo handler, pitch handler, and event wiring
 
 ## Desktop Smoke Test Results
 
@@ -116,7 +116,7 @@ None.
 
 ## Self-Check: PASSED
 
-- FOUND: dairapp/poc.js (134 lines, verified > 60)
+- FOUND: pandero/poc.js (134 lines, verified > 60)
 - FOUND commit: f51b80e (Task 1 — feat(01-02): implement full audio pipeline in poc.js)
 - Checkpoint Task 2: user-approved, no code commit needed
 - All acceptance criteria verified:

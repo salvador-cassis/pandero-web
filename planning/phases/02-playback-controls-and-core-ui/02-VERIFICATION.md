@@ -41,9 +41,9 @@ The prompt notes two user decisions that override the plan's stated truths:
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `dairapp/soundtouch-processor.js` | Patched constructor accepting processorOptions | VERIFIED | Lines 875-886: `constructor(options)`, `super(options)`, `options.processorOptions`, `this._pipe.stretch.setParameters(sampleRate, po.sequenceMs, po.seekWindowMs, po.overlapMs)`. |
-| `dairapp/poc.js` | Toggle, volume, reset, BPM display, semitone display, GainNode | VERIFIED | 191 lines. Contains all required functions. No `SoundTouchNode` references (grep confirmed 0 occurrences). No `play-btn`/`pause-btn` references (grep confirmed 0 occurrences). |
-| `dairapp/poc.html` | Toggle button, volume slider, reset button, BPM span, pitch span | VERIFIED | 60 lines. Contains `id="toggle-btn"`, `id="volume"`, `id="reset-btn"`, `id="tempo-val"` (initial: 111), `id="pitch-val"` (initial: 0). `@soundtouchjs/audio-worklet` removed from importmap. |
+| `pandero/soundtouch-processor.js` | Patched constructor accepting processorOptions | VERIFIED | Lines 875-886: `constructor(options)`, `super(options)`, `options.processorOptions`, `this._pipe.stretch.setParameters(sampleRate, po.sequenceMs, po.seekWindowMs, po.overlapMs)`. |
+| `pandero/poc.js` | Toggle, volume, reset, BPM display, semitone display, GainNode | VERIFIED | 191 lines. Contains all required functions. No `SoundTouchNode` references (grep confirmed 0 occurrences). No `play-btn`/`pause-btn` references (grep confirmed 0 occurrences). |
+| `pandero/poc.html` | Toggle button, volume slider, reset button, BPM span, pitch span | VERIFIED | 60 lines. Contains `id="toggle-btn"`, `id="volume"`, `id="reset-btn"`, `id="tempo-val"` (initial: 111), `id="pitch-val"` (initial: 0). `@soundtouchjs/audio-worklet` removed from importmap. |
 
 ### Key Link Verification
 

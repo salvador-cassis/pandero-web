@@ -71,8 +71,8 @@ Wire all table-stakes controls to the Phase 1 audio engine: play/pause toggle, t
 **Downstream agents MUST read these before planning or implementing.**
 
 ### Existing implementation (read first)
-- `dairapp/poc.js` — Phase 1 audio engine: singleton pattern, tandem playbackRate, suspend/resume, SoundTouchNode wiring
-- `dairapp/poc.html` — Current HTML structure: importmap, isSecureContext guard, existing slider/button IDs
+- `pandero/poc.js` — Phase 1 audio engine: singleton pattern, tandem playbackRate, suspend/resume, SoundTouchNode wiring
+- `pandero/poc.html` — Current HTML structure: importmap, isSecureContext guard, existing slider/button IDs
 
 ### Phase 2 requirements
 - `.planning/REQUIREMENTS.md` §Controles de Reproducción — CTRL-01 through CTRL-05
@@ -92,9 +92,9 @@ Wire all table-stakes controls to the Phase 1 audio engine: play/pause toggle, t
 ## Existing Code Insights
 
 ### Reusable Assets
-- `dairapp/poc.js`: `handleTempoChange()` already implements tandem pattern — extend, don't rewrite
-- `dairapp/poc.js`: `play()` and `pause()` functions — refactor play() into toggle, reuse pause() logic
-- `dairapp/poc.html`: existing importmap + isSecureContext guard — keep as-is
+- `pandero/poc.js`: `handleTempoChange()` already implements tandem pattern — extend, don't rewrite
+- `pandero/poc.js`: `play()` and `pause()` functions — refactor play() into toggle, reuse pause() logic
+- `pandero/poc.html`: existing importmap + isSecureContext guard — keep as-is
 
 ### Established Patterns
 - Tandem pattern: `source.playbackRate.value = ratio; stNode.playbackRate.value = ratio;` — MUST be replicated in reset button

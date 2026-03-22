@@ -121,7 +121,7 @@ Confirmed directly from `soundtouch-processor.js` source (lines 833–870):
 ### Recommended Project Structure (unchanged from Phase 1)
 
 ```
-dairapp/
+pandero/
   poc.js                     # Phase 2 — extend existing (D-01)
   poc.html                   # Phase 2 — extend existing (D-01)
   pandero.mp3                # unchanged
@@ -573,7 +573,7 @@ function handleReset() {
 
 ### Primary (HIGH confidence)
 
-- Local `dairapp/soundtouch-processor.js` (v1.0.8 bundled source) — WSOLA defaults, auto-calculation formulas, AudioParam list, constructor structure. Lines 372–929 read directly.
+- Local `pandero/soundtouch-processor.js` (v1.0.8 bundled source) — WSOLA defaults, auto-calculation formulas, AudioParam list, constructor structure. Lines 372–929 read directly.
 - MDN Web Audio API — `GainNode`, `AudioWorkletProcessor`, `AudioWorkletNode`, `processorOptions` specification.
 - SoundTouch C++ README (www.surina.net/soundtouch/README.html) — authoritative WSOLA parameter documentation from original algorithm author. Confirmed: defaults are for pop/rock; percussion benefits from shorter sequence lengths.
 
