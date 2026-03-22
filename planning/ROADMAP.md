@@ -58,8 +58,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Responsive layout and touch targets (mobile-first CSS, minimum 44×44px touch targets on all controls, slider thumb sizing, layout verified at 375px / 768px / 1280px breakpoints)
-- [ ] 03-02: Widget file structure and isolation (`pandero/` directory with `player.js`, `player.css`, `pandero.mp3`, `soundtouch-processor.js`; IIFE or ES module scope isolation; scoped CSS selectors prefixed `pandero-`; auto-mount from `div#pandero-player`; two-line embed verified in a real host page)
+- [ ] 03-01-PLAN.md — Widget CSS and visual identity (self-hosted Caveat font, earthy palette with CSS custom properties, hexagon play button via clip-path with handmade perturbation, circular slider thumbs, 44px touch targets, mobile-first flexbox layout at 375px max-width)
+- [ ] 03-02-PLAN.md — Widget JS migration and embedding (migrate poc.js to player.js with programmatic DOM creation inside #pandero-player, pandero-* prefixed IDs, direct CDN URL for unmute-ios-audio eliminating importmap, reset button removed, import.meta.url for asset resolution)
 
 ### Phase 4: Cueca-Specific UX Refinements
 **Goal**: The tool communicates from first load that it is built for cueca — the default tempo and vocabulary labels speak directly to the target community
