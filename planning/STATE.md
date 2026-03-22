@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0.8
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-22T14:43:50.068Z"
+status: Executing Phase 03
+last_updated: "2026-03-22T18:11:12.236Z"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 7
+  completed_plans: 6
 ---
 
 # Project State
@@ -18,7 +18,7 @@ progress:
 See: planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte al otro, para practicar cueca en cualquier nivel y contexto.
-**Current focus:** Phase 02 — playback-controls-and-core-ui
+**Current focus:** Phase 03 — Mobile Polish and Embedding
 
 ## Current Status
 
@@ -44,6 +44,8 @@ See: planning/PROJECT.md (updated 2026-03-22)
 - **01-02:** Tandem pattern uses source.playbackRate + stNode.playbackRate (not stNode.tempo) — verified gap-free on desktop
 - **01-02:** play() creates a new SoundTouchNode on each call — avoids stale node state on restart
 - **01-02:** Pause/resume via audioCtx.suspend()/resume() — preserves loop position without source.stop()
+- [Phase 03-01]: Caveat v23 URL used instead of v18 — v18 URL redirects to HTML; current URL fetched from live Google Fonts API
+- [Phase 03-01]: CSS custom properties scoped to #pandero-player (not :root) to prevent token leakage into host page
 
 ## Notes
 

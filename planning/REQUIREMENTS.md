@@ -29,8 +29,8 @@
 
 ### UI y Embedding
 
-- [ ] **UI-01**: La interfaz es responsive y usable en móvil (teléfono en atril)
-- [ ] **UI-02**: Los controles tienen touch targets suficientemente grandes para uso con dedos
+- [x] **UI-01**: La interfaz es responsive y usable en móvil (teléfono en atril)
+- [x] **UI-02**: Los controles tienen touch targets suficientemente grandes para uso con dedos
 - [ ] **UI-03**: El widget se puede embeber en una página HTML existente con dos líneas (un `<div>` y un `<script>`)
 - [ ] **UI-04**: El JS del widget no contamina el scope global de la página host
 
@@ -84,8 +84,8 @@
 | CTRL-05 | Phase 2 | Pending |
 | VIS-01 | Phase 2 | Pending |
 | VIS-02 | Phase 2 | Pending |
-| UI-01 | Phase 3 | Pending |
-| UI-02 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Complete |
+| UI-02 | Phase 3 | Complete |
 | UI-03 | Phase 3 | Pending |
 | UI-04 | Phase 3 | Pending |
 | CUE-01 | Phase 4 | Pending |

@@ -58,7 +58,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Widget CSS and visual identity (self-hosted Caveat font, earthy palette with CSS custom properties, hexagon play button via clip-path with handmade perturbation, circular slider thumbs, 44px touch targets, mobile-first flexbox layout at 375px max-width)
+- [x] 03-01-PLAN.md — Widget CSS and visual identity (self-hosted Caveat font, earthy palette with CSS custom properties, hexagon play button via clip-path with handmade perturbation, circular slider thumbs, 44px touch targets, mobile-first flexbox layout at 375px max-width)
 - [ ] 03-02-PLAN.md — Widget JS migration and embedding (migrate poc.js to player.js with programmatic DOM creation inside #pandero-player, pandero-* prefixed IDs, direct CDN URL for unmute-ios-audio eliminating importmap, reset button removed, import.meta.url for asset resolution)
 
 ### Phase 4: Cueca-Specific UX Refinements
