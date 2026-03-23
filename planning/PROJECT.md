@@ -2,11 +2,11 @@
 
 ## What This Is
 
-Herramienta web para estudiar y practicar cueca chilena. Permite reproducir un backing track de un instrumento específico (pandero en v1) con control independiente de pitch y tempo, para que cualquier músico — cantor, guitarrista, panderetero, acordeonista — pueda ensayar a su propio ritmo y tonalidad. Disponible gratis en la web, sin necesidad de instalación ni financiamiento.
+Herramienta web para estudiar y practicar cueca chilena. Permite reproducir un backing track de pandero con control de tempo, para que cualquier músico pueda ensayar a su propio ritmo. Disponible gratis en la web, sin necesidad de instalación ni financiamiento. Un solo control, una sola acción: ajustar el tiempo.
 
 ## Core Value
 
-El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte al otro, para practicar cueca en cualquier nivel y contexto.
+El músico puede ajustar el tempo del pandero para practicar cueca a su propio ritmo, desde un widget embebible en cualquier página web.
 
 ## Requirements
 
@@ -14,12 +14,17 @@ El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte
 
 - [x] Reproducir un MP3 fijo de pandero desde el navegador — Validated in Phase 1: Audio Engine Foundation
 - [x] Controlar el tempo de forma independiente (sin afectar pitch) — Validated in Phase 1: Audio Engine Foundation
-- [x] Controlar el pitch de forma independiente (sin afectar tempo) — Validated in Phase 1: Audio Engine Foundation
 - [x] Interfaz embebible en web existente (HTML/JS puro, sin framework) — Validated in Phase 3: Mobile Polish and Embedding
+- [x] Tempo por defecto apropiado para cueca (~112 BPM, CUE-01) — Validated in Phase 4: Cueca-Specific UX Refinements
+- [x] Widget simplificado a un solo control de tempo (sin pitch ni volumen) — Validated in Phase 4: Cueca-Specific UX Refinements
 
 ### Active
 
 - [ ] Accesible para público general sin instalación
+
+### Out of Scope (v1)
+
+- Controlar pitch de forma independiente — audio engine lo soporta internamente, pero UI removida en Phase 4 por decisión del usuario (v2+)
 
 ### Out of Scope
 
@@ -72,4 +77,4 @@ Este documento evoluciona en cada transición de fase y milestone.
 4. Actualizar Context con estado actual
 
 ---
-*Last updated: 2026-03-22 — Phase 3 complete*
+*Last updated: 2026-03-23 — Phase 4 complete (milestone v1.0.8 done)*
