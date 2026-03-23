@@ -119,10 +119,78 @@ let isInitialized = false;  // ENG-05 guard: AudioContext created only once, ins
 let isPlaying = false;
 let animFrame = null;
 let lastBeatIdx = -1;
-let playbackStartCtxTime = 0;
 let accumulatedBufferTime = 0;  // buffer-time odometer: accumulates on every ratio change
 let lastTempoChangeCtxTime = 0; // audioCtx.currentTime at last ratio change
 let currentRatio = 1.009;       // mirrors the slider, kept in sync by handleTempoChange
+
+// ---------------------------------------------------------------------------
+// Slice mode constants and state.
+// Below SLICE_THRESHOLD the WSOLA algorithm produces audible artifacts on
+// percussion — the "drunk" smear. Slice mode plays each grid segment at the
+// original recording speed and stretches real-time by adding silence between
+// segments, like Logic Pro's Slice algorithm.
+// ---------------------------------------------------------------------------
+const SLICE_THRESHOLD = 0.785;  // ratio below which slice activates (~87 BPM)
+const NUM_GRID        = 24;     // equal segments per loop
+const SLICE_LOOKAHEAD = 0.25;   // seconds ahead to schedule (latency buffer)
+const SLICE_INTERVAL  = 100;    // scheduler poll interval (ms)
+
+let sliceMode    = false;   // true when slice scheduler is active
+let sliceTimer   = null;    // setInterval handle
+let nextSliceIdx = 0;       // next grid segment index to schedule
+let nextSliceWhen = 0;      // audioCtx.currentTime when nextSliceIdx should play
+let activeSources = [];     // fire-and-forget nodes currently in flight (slice mode)
+
+// ---------------------------------------------------------------------------
+// stopCurrentPlayback() — tears down whichever playback mode is active.
+// Safe to call when nothing is playing (all guards are null-checks).
+// ---------------------------------------------------------------------------
+function stopCurrentPlayback() {
+  // WSOLA nodes
+  if (source) { try { source.stop(); } catch (_) {} source.disconnect(); source = null; }
+  if (stNode)  { stNode.disconnect(); stNode = null; }
+  // Slice scheduler + in-flight segments
+  if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
+  activeSources.forEach(s => { try { s.stop(); s.disconnect(); } catch (_) {} });
+  activeSources = [];
+}
+
+// ---------------------------------------------------------------------------
+// scheduleSlices() — look-ahead scheduler for slice mode.
+// Runs on a setInterval; schedules AudioBufferSourceNode segments just ahead
+// of audioCtx.currentTime so the audio thread always has work queued.
+// Each segment plays at original speed — only the real-time gaps are stretched.
+// ---------------------------------------------------------------------------
+function scheduleSlices() {
+  if (!isPlaying || !audioBuffer) return;
+  const segDur = audioBuffer.duration / NUM_GRID;
+  const now    = audioCtx.currentTime;
+
+  // Background-tab recovery: if the tab was hidden, nextSliceWhen may be far
+  // in the past. Fast-forward index and time to stay close to the present.
+  if (nextSliceWhen < now - segDur / currentRatio) {
+    const behind = Math.ceil((now - nextSliceWhen) / (segDur / currentRatio));
+    nextSliceIdx  = (nextSliceIdx + behind) % NUM_GRID;
+    nextSliceWhen += behind * (segDur / currentRatio);
+    if (nextSliceWhen < now) nextSliceWhen = now;
+  }
+
+  while (nextSliceWhen < now + SLICE_LOOKAHEAD) {
+    const node = audioCtx.createBufferSource();
+    node.buffer = audioBuffer;
+    node.connect(gainNode);
+    // start(when, offset, duration): play one segment at original speed
+    node.start(nextSliceWhen, nextSliceIdx * segDur, segDur);
+    activeSources.push(node);
+    node.onended = () => {
+      const i = activeSources.indexOf(node);
+      if (i !== -1) activeSources.splice(i, 1);
+    };
+    nextSliceIdx  = (nextSliceIdx + 1) % NUM_GRID;
+    // real-time gap between segment onsets = segDur / ratio
+    nextSliceWhen += segDur / currentRatio;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // init() — called exclusively inside togglePlayback(), which is a click handler.
@@ -156,45 +224,48 @@ async function init() {
 
 // ---------------------------------------------------------------------------
 // startPlayback() — internal: starts (or restarts) playback from the beginning.
-// Creates a new AudioBufferSourceNode and AudioWorkletNode each call;
-// source nodes are fire-and-forget (cannot be reused — Pitfall 6).
+// Branches on sliceMode: WSOLA graph for normal tempos, look-ahead slice
+// scheduler for slow tempos (below SLICE_THRESHOLD).
 // ---------------------------------------------------------------------------
-async function startPlayback() {
-  // Disconnect previous nodes to prevent multiple stNodes feeding gainNode.
-  if (source) source.disconnect();
-  if (stNode) stNode.disconnect();
+function startPlayback() {
+  stopCurrentPlayback();  // tear down any prior mode cleanly
 
-  // Build audio graph: source → stNode → gainNode → destination.
-  // Use raw AudioWorkletNode (not the library wrapper) to pass processorOptions.
-  // WSOLA params: sequenceMs=40, seekWindowMs=15, overlapMs=8 — tuned for percussion.
-  stNode = new AudioWorkletNode(audioCtx, 'soundtouch-processor', {
-    numberOfInputs: 1,
-    numberOfOutputs: 1,
-    outputChannelCount: [2],
-    processorOptions: {
-      sequenceMs: 40,
-      seekWindowMs: 15,
-      overlapMs: 8
-    }
-  });
-  stNode.connect(gainNode);
-
-  source = audioCtx.createBufferSource();
-  source.buffer = audioBuffer;
-  source.loop = true;  // ENG-04: seamless loop — browser handles boundary with zero gap
-
-  // ENG-02: Tandem pattern — BOTH source and stNode must receive the same ratio.
-  // Prevents silence gaps at ratios > 1.0 (Pitfall 4). stNode.tempo is NOT used.
   const ratio = parseFloat(document.getElementById('pandero-tempo').value);
-  source.playbackRate.value = ratio;
-  source.connect(stNode);
-  stNode.parameters.get('playbackRate').value = ratio;  // processor divides pitch by this automatically
+  sliceMode = ratio < SLICE_THRESHOLD;
 
-  playbackStartCtxTime = audioCtx.currentTime;
-  accumulatedBufferTime = 0;
+  // Reset odometer — beat animation starts tracking from buffer position 0.
+  accumulatedBufferTime  = 0;
   lastTempoChangeCtxTime = audioCtx.currentTime;
-  currentRatio = parseFloat(document.getElementById('pandero-tempo').value);
-  source.start();
+  currentRatio           = ratio;
+
+  if (sliceMode) {
+    // Slice mode: schedule individual segments at original speed, gaps provide stretch.
+    nextSliceIdx  = 0;
+    nextSliceWhen = audioCtx.currentTime;
+    activeSources = [];
+    scheduleSlices();
+    sliceTimer = setInterval(scheduleSlices, SLICE_INTERVAL);
+  } else {
+    // WSOLA mode: source → SoundTouch worklet → gainNode.
+    // ENG-02: Tandem pattern — both nodes receive the same ratio.
+    // WSOLA params tuned for percussion: seq=40ms, seek=15ms, overlap=8ms.
+    stNode = new AudioWorkletNode(audioCtx, 'soundtouch-processor', {
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [2],
+      processorOptions: { sequenceMs: 40, seekWindowMs: 15, overlapMs: 8 }
+    });
+    stNode.connect(gainNode);
+
+    source = audioCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.loop = true;  // ENG-04: seamless loop
+    source.playbackRate.value = ratio;
+    source.connect(stNode);
+    stNode.parameters.get('playbackRate').value = ratio;
+    source.start();
+  }
+
   startBeatAnim();
 }
 
@@ -251,8 +322,7 @@ async function togglePlayback() {
     hexBtn.querySelector('.pandero-icon-pause').style.display = '';
     hexBtn.setAttribute('aria-label', 'Detener');
   } else {
-    if (source) { source.stop(); source.disconnect(); source = null; }
-    if (stNode) { stNode.disconnect(); stNode = null; }
+    stopCurrentPlayback();
     isPlaying = false;
     stopBeatAnim();
     hexBtn.querySelector('.pandero-icon-play').style.display = '';
@@ -262,22 +332,54 @@ async function togglePlayback() {
 }
 
 // ---------------------------------------------------------------------------
-// handleTempoChange — ENG-02: tandem pattern (both nodes, same ratio).
-// Display updates always (even before first play). AudioParam updates only when playing.
+// handleTempoChange — updates display always; updates engine only when playing.
+// Handles three cases:
+//   1. No change in mode (WSOLA↔WSOLA): live tandem AudioParam update.
+//   2. No change in mode (slice↔slice): restart scheduler at new ratio.
+//   3. Mode boundary crossed: restart playback entirely in new mode.
 // VIS-01, D-10, D-12: show BPM as integer (Math.round(ratio * 111)).
 // ---------------------------------------------------------------------------
 function handleTempoChange(e) {
   const ratio = parseFloat(e.target.value);
   document.getElementById('pandero-tempo-val').textContent = Math.round(ratio * 111) + ' BPM';
-  if (!source || !stNode) return;
-  // Odometer: commit elapsed buffer-time at the old ratio before switching.
-  if (isPlaying && audioCtx) {
-    accumulatedBufferTime += (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
-    lastTempoChangeCtxTime = audioCtx.currentTime;
+
+  if (!isPlaying || !audioCtx) {
     currentRatio = ratio;
+    return;
   }
-  source.playbackRate.value = ratio;
-  stNode.parameters.get('playbackRate').value = ratio;
+
+  // Odometer: commit elapsed buffer-time at the old ratio before switching.
+  accumulatedBufferTime += (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
+  lastTempoChangeCtxTime = audioCtx.currentTime;
+  currentRatio = ratio;
+
+  const willSlice = ratio < SLICE_THRESHOLD;
+
+  if (willSlice !== sliceMode) {
+    // Mode boundary crossed — restart in new mode.
+    // accumulatedBufferTime is reset inside startPlayback(); beat indicator restarts
+    // from 0 which is unnoticeable on a loop.
+    startPlayback();
+    return;
+  }
+
+  if (sliceMode) {
+    // Staying in slice mode — restart scheduler from current buffer position at new ratio.
+    // In-flight segments are short (< segDur seconds) so stopping them is seamless.
+    if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
+    activeSources.forEach(s => { try { s.stop(); s.disconnect(); } catch (_) {} });
+    activeSources = [];
+    const segDur   = audioBuffer.duration / NUM_GRID;
+    const posInBuf = accumulatedBufferTime % audioBuffer.duration;
+    nextSliceIdx   = Math.floor(posInBuf / segDur) % NUM_GRID;
+    nextSliceWhen  = audioCtx.currentTime;
+    scheduleSlices();
+    sliceTimer = setInterval(scheduleSlices, SLICE_INTERVAL);
+  } else {
+    // Staying in WSOLA mode — live tandem update, no restart needed.
+    source.playbackRate.value = ratio;
+    stNode.parameters.get('playbackRate').value = ratio;
+  }
 }
 
 // ---------------------------------------------------------------------------
