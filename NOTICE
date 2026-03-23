@@ -1,0 +1,22 @@
+Third-Party Notices
+===================
+
+soundtouch-processor.js
+------------------------
+Derived from @soundtouchjs/audio-worklet by Luwes
+Based on SoundTouch audio processing library by Olli Parviainen.
+Licensed under the GNU Lesser General Public License v2.1.
+Source: https://codeberg.org/soundtouch/soundtouch
+        https://github.com/luwes/soundtouch-audio-worklet
+
+Lora typeface
+-------------
+Designed by Cyreal.
+Licensed under the SIL Open Font License, Version 1.1.
+Source: https://fonts.google.com/specimen/Lora
+
+unmute-ios-audio
+----------------
+By Feross Aboukhadijeh.
+Licensed under the MIT License.
+Source: https://github.com/feross/unmute-ios-audio
