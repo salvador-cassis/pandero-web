@@ -218,37 +218,53 @@ function scheduleSlices() {
   const nHits  = sliceHits.length;
   const now    = audioCtx.currentTime;
 
-  // seg(i): {offset, dur} for logical slice index i (wraps around the loop).
+  // seg(i): {offset, dur, isLast} for logical slice index i (wraps around the loop).
+  // isLast flags the final segment of each loop cycle — it ends at bufDur and
+  // may have reverb tail, so it gets a longer fade-out than intra-loop segments.
+  const loopLen = nHits > 0 ? nHits : NUM_GRID;
   function seg(i) {
     if (nHits === 0) {
-      // Fallback: equal grid
       const d = bufDur / NUM_GRID;
-      return { offset: (i % NUM_GRID) * d, dur: d };
+      const h = i % NUM_GRID;
+      return { offset: h * d, dur: d, isLast: h === NUM_GRID - 1 };
     }
     const h      = i % nHits;
     const offset = sliceHits[h];
     const end    = h < nHits - 1 ? sliceHits[h + 1] : bufDur;
-    return { offset, dur: end - offset };
+    return { offset, dur: end - offset, isLast: h === nHits - 1 };
   }
 
   // Background-tab recovery: fast-forward past all segments that are
   // already in the past, then pin nextSliceWhen to now if still behind.
   let guard = 0;
   while (nextSliceWhen < now - SLICE_LOOKAHEAD && guard++ < 500) {
-    nextSliceWhen += seg(nextSliceIdx).dur / currentRatio;
+    nextSliceWhen += seg(nextSliceIdx).dur / currentRatio;  // isLast not needed here
     nextSliceIdx++;
   }
   if (nextSliceWhen < now) nextSliceWhen = now;
 
   // Schedule up to SLICE_LOOKAHEAD seconds ahead
   while (nextSliceWhen < now + SLICE_LOOKAHEAD) {
-    const { offset, dur } = seg(nextSliceIdx);
+    const { offset, dur, isLast } = seg(nextSliceIdx);
+
+    // Per-segment gain envelope with targeted fade-out:
+    //   • Intra-loop segments end right before the next hit (amplitude ≈ 0) → 3ms
+    //   • Last segment ends at bufDur where reverb tail may still be active → 50ms
+    // This preserves the trill attack while eliminating the loop-boundary click.
+    const fadeOut  = isLast ? Math.min(0.050, dur * 0.25) : Math.min(0.003, dur * 0.05);
+    const segGain  = audioCtx.createGain();
+    segGain.connect(gainNode);
+    segGain.gain.setValueAtTime(1.0, nextSliceWhen);
+    segGain.gain.setValueAtTime(1.0, nextSliceWhen + dur - fadeOut);
+    segGain.gain.linearRampToValueAtTime(0.0, nextSliceWhen + dur);
+
     const node = audioCtx.createBufferSource();
     node.buffer = audioBuffer;
-    node.connect(gainNode);
+    node.connect(segGain);
     node.start(nextSliceWhen, offset, dur);
     activeSources.push(node);
     node.onended = () => {
+      segGain.disconnect();
       const i = activeSources.indexOf(node);
       if (i !== -1) activeSources.splice(i, 1);
     };
@@ -352,6 +368,7 @@ function stopBeatAnim() {
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
   lastBeatIdx = -1;
   root.querySelectorAll('.pandero-beat').forEach(d => d.classList.remove('pandero-beat-active'));
+  hexBtn.querySelector('.pandero-hex-svg')?.classList.remove('pandero-hex-beat');
 }
 
 function animLoop() {
@@ -364,6 +381,11 @@ function animLoop() {
     root.querySelectorAll('.pandero-beat').forEach((d, i) => {
       d.classList.toggle('pandero-beat-active', i === beatIdx);
     });
+    // Flash the hexagon: remove → force reflow → re-add restarts the keyframe.
+    const svg = hexBtn.querySelector('.pandero-hex-svg');
+    svg.classList.remove('pandero-hex-beat');
+    void svg.offsetWidth;
+    svg.classList.add('pandero-hex-beat');
   }
   animFrame = requestAnimationFrame(animLoop);
 }
@@ -424,25 +446,49 @@ function handleTempoChange(e) {
   const willSlice = ratio < SLICE_THRESHOLD;
 
   if (willSlice !== sliceMode) {
-    // Mode boundary crossed — restart in new mode.
-    // accumulatedBufferTime is reset inside startPlayback(); beat indicator restarts
-    // from 0 which is unnoticeable on a loop.
-    startPlayback();
+    if (!sliceMode && source) {
+      // WSOLA → Slice: schedule WSOLA source to stop in 40ms (avoids abrupt cut),
+      // then start slice scheduler from the correct position in the loop.
+      const handoff = audioCtx.currentTime + 0.040;
+      source.stop(handoff);
+      if (stNode) { stNode.disconnect(); stNode = null; }
+      source = null;
+      sliceMode = true;
+      // accumulatedBufferTime was already committed above by the odometer.
+      // Project forward 40ms to find buffer position when WSOLA actually stops.
+      const bufPosAtHandoff = (accumulatedBufferTime + 0.040 * ratio) % audioBuffer.duration;
+      const nH = sliceHits.length;
+      if (nH > 0) {
+        // Find the first hit strictly after bufPosAtHandoff
+        let hi = 0;
+        while (hi < nH && sliceHits[hi] <= bufPosAtHandoff) hi++;
+        // hi === nH means we're past the last hit — next is slice 0 of next loop
+        const nextOnset = hi < nH ? sliceHits[hi] : audioBuffer.duration;
+        nextSliceIdx  = hi % nH;
+        nextSliceWhen = handoff + (nextOnset - bufPosAtHandoff) / ratio;
+      } else {
+        const segDur  = audioBuffer.duration / NUM_GRID;
+        const hi      = Math.ceil(bufPosAtHandoff / segDur);
+        nextSliceIdx  = hi % NUM_GRID;
+        nextSliceWhen = handoff + (hi * segDur - bufPosAtHandoff) / ratio;
+      }
+      activeSources = [];
+      scheduleSlices();
+      sliceTimer = setInterval(scheduleSlices, SLICE_INTERVAL);
+    } else {
+      // Slice → WSOLA: slice segments are very short; startPlayback is clean enough.
+      startPlayback();
+    }
     return;
   }
 
   if (sliceMode) {
-    // Staying in slice mode — restart scheduler from current buffer position at new ratio.
-    // In-flight segments are short (< segDur seconds) so stopping them is seamless.
-    if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
-    activeSources.forEach(s => { try { s.stop(); s.disconnect(); } catch (_) {} });
-    activeSources = [];
-    const segDur   = audioBuffer.duration / NUM_GRID;
-    const posInBuf = accumulatedBufferTime % audioBuffer.duration;
-    nextSliceIdx   = Math.floor(posInBuf / segDur) % NUM_GRID;
-    nextSliceWhen  = audioCtx.currentTime;
-    scheduleSlices();
-    sliceTimer = setInterval(scheduleSlices, SLICE_INTERVAL);
+    // currentRatio was updated above — the running setInterval picks it up
+    // automatically on its next tick. Do NOT stop in-flight segments: calling
+    // s.stop() mid-playback causes an audible click on every slider movement.
+    // nextSliceWhen already points to the next upcoming segment; new segments
+    // will be spaced at the new ratio from that point forward.
+    return;
   } else {
     // Staying in WSOLA mode — live tandem update, no restart needed.
     source.playbackRate.value = ratio;
