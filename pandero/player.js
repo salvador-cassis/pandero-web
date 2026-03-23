@@ -140,6 +140,56 @@ let sliceTimer   = null;    // setInterval handle
 let nextSliceIdx = 0;       // next grid segment index to schedule
 let nextSliceWhen = 0;      // audioCtx.currentTime when nextSliceIdx should play
 let activeSources = [];     // fire-and-forget nodes currently in flight (slice mode)
+let sliceHits     = [];     // onset times (sec) detected in audioBuffer — set in init()
+
+// ---------------------------------------------------------------------------
+// findTransients(buffer) — detect percussion onset times in a decoded buffer.
+// Algorithm: half-wave rectified first-order difference of the short-window
+// RMS envelope (standard onset detection function for percussive audio).
+// Returns an array of times in seconds, sorted ascending.
+// Falls back to an empty array if no peaks exceed the threshold.
+// ---------------------------------------------------------------------------
+function findTransients(buffer) {
+  const data = buffer.getChannelData(0);
+  const sr   = buffer.sampleRate;
+  const WIN  = Math.max(1, Math.floor(0.005 * sr));  // 5 ms RMS window
+  const HOP  = Math.max(1, Math.floor(0.002 * sr));  // 2 ms hop
+  const nF   = Math.floor((data.length - WIN) / HOP);
+
+  // Short-window RMS envelope
+  const env = new Float32Array(nF);
+  for (let f = 0; f < nF; f++) {
+    let s = 0, b = f * HOP;
+    for (let k = 0; k < WIN; k++) s += data[b + k] * data[b + k];
+    env[f] = Math.sqrt(s / WIN);
+  }
+
+  // Half-wave rectified first-order difference = onset strength function
+  let peak = 0;
+  const odf = new Float32Array(nF);
+  for (let f = 1; f < nF; f++) {
+    odf[f] = Math.max(0, env[f] - env[f - 1]);
+    if (odf[f] > peak) peak = odf[f];
+  }
+
+  // Pick local maxima above threshold with minimum inter-onset gap
+  const thresh    = peak * 0.12;
+  const minGapF   = Math.floor(0.08 * sr / HOP);  // 80 ms min gap
+  const hits = [];
+  let lastF = -minGapF;
+  for (let f = 1; f < nF - 1; f++) {
+    if (odf[f] > thresh &&
+        odf[f] >= odf[f - 1] &&
+        odf[f] >= odf[f + 1] &&
+        f - lastF >= minGapF) {
+      hits.push(f * HOP / sr);
+      lastF = f;
+    }
+  }
+  console.log('[pandero] transients detected:', hits.length,
+    '—', hits.map(t => t.toFixed(3) + 's').join('  '));
+  return hits;
+}
 
 // ---------------------------------------------------------------------------
 // stopCurrentPlayback() — tears down whichever playback mode is active.
@@ -157,38 +207,53 @@ function stopCurrentPlayback() {
 
 // ---------------------------------------------------------------------------
 // scheduleSlices() — look-ahead scheduler for slice mode.
-// Runs on a setInterval; schedules AudioBufferSourceNode segments just ahead
-// of audioCtx.currentTime so the audio thread always has work queued.
-// Each segment plays at original speed — only the real-time gaps are stretched.
+// Uses detected transient positions (sliceHits) so each segment starts exactly
+// at a real pandero hit rather than at an arbitrary equal-grid boundary.
+// Falls back to NUM_GRID equal segments if transient detection found nothing.
+// Each segment plays at original speed; only the real-time gaps are stretched.
 // ---------------------------------------------------------------------------
 function scheduleSlices() {
   if (!isPlaying || !audioBuffer) return;
-  const segDur = audioBuffer.duration / NUM_GRID;
+  const bufDur = audioBuffer.duration;
+  const nHits  = sliceHits.length;
   const now    = audioCtx.currentTime;
 
-  // Background-tab recovery: if the tab was hidden, nextSliceWhen may be far
-  // in the past. Fast-forward index and time to stay close to the present.
-  if (nextSliceWhen < now - segDur / currentRatio) {
-    const behind = Math.ceil((now - nextSliceWhen) / (segDur / currentRatio));
-    nextSliceIdx  = (nextSliceIdx + behind) % NUM_GRID;
-    nextSliceWhen += behind * (segDur / currentRatio);
-    if (nextSliceWhen < now) nextSliceWhen = now;
+  // seg(i): {offset, dur} for logical slice index i (wraps around the loop).
+  function seg(i) {
+    if (nHits === 0) {
+      // Fallback: equal grid
+      const d = bufDur / NUM_GRID;
+      return { offset: (i % NUM_GRID) * d, dur: d };
+    }
+    const h      = i % nHits;
+    const offset = sliceHits[h];
+    const end    = h < nHits - 1 ? sliceHits[h + 1] : bufDur;
+    return { offset, dur: end - offset };
   }
 
+  // Background-tab recovery: fast-forward past all segments that are
+  // already in the past, then pin nextSliceWhen to now if still behind.
+  let guard = 0;
+  while (nextSliceWhen < now - SLICE_LOOKAHEAD && guard++ < 500) {
+    nextSliceWhen += seg(nextSliceIdx).dur / currentRatio;
+    nextSliceIdx++;
+  }
+  if (nextSliceWhen < now) nextSliceWhen = now;
+
+  // Schedule up to SLICE_LOOKAHEAD seconds ahead
   while (nextSliceWhen < now + SLICE_LOOKAHEAD) {
+    const { offset, dur } = seg(nextSliceIdx);
     const node = audioCtx.createBufferSource();
     node.buffer = audioBuffer;
     node.connect(gainNode);
-    // start(when, offset, duration): play one segment at original speed
-    node.start(nextSliceWhen, nextSliceIdx * segDur, segDur);
+    node.start(nextSliceWhen, offset, dur);
     activeSources.push(node);
     node.onended = () => {
       const i = activeSources.indexOf(node);
       if (i !== -1) activeSources.splice(i, 1);
     };
-    nextSliceIdx  = (nextSliceIdx + 1) % NUM_GRID;
-    // real-time gap between segment onsets = segDur / ratio
-    nextSliceWhen += segDur / currentRatio;
+    nextSliceIdx++;
+    nextSliceWhen += dur / currentRatio;
   }
 }
 
@@ -214,6 +279,9 @@ async function init() {
   // Decode the pre-fetched MP3 — now that AudioContext exists.
   const arrayBuffer = await mp3Promise;
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+  // Detect pandero hit positions for slice mode (runs synchronously, < 5ms).
+  sliceHits = findTransients(audioBuffer);
 
   // GainNode created once in init() — persists across startPlayback() restarts.
   // stNode connects to gainNode on each startPlayback(); gainNode routes to destination.
