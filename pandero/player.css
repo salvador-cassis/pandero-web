@@ -109,11 +109,11 @@
 
 /* Beat flash is driven by Web Animations API in player.js — no CSS class needed. */
 
-/* Pause bars — inline SVG paths */
+/* Pause bars — white to match the solid white play triangle */
 .pandero-pause-bar {
   fill: none;
-  stroke: #000000;
-  stroke-width: 4.5px;
+  stroke: #ffffff;
+  stroke-width: 7px;
   stroke-linecap: round;
 }
 

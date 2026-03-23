@@ -70,16 +70,14 @@ function buildDOM() {
   const hexBtn = el('button', 'pandero-play-btn');
   hexBtn.setAttribute('type', 'button');
   hexBtn.setAttribute('aria-label', 'Reproducir / Detener');
-  // SVG: loads original hand-drawn Inkscape assets.
-  // hex-borde.svg = teal hexagon fill + hand-drawn 6-sided frame (two offset layers for depth).
-  // borde-play.svg = play triangle (3 filled marker-stroke paths).
-  // Play position (37.12, 35.06) derived from canvas origin offset between both SVG exports.
+  // SVG: hex-borde.svg = teal fill + hand-drawn frame.
+  // Play icon: inline solid white polygon — bold contrast against teal.
+  // Centroid ≈ (66, 71), visually centered in the 134×142 viewBox.
   const hexBordeUrl = new URL('./hex-borde.svg', import.meta.url).href;
-  const playUrl = new URL('./borde-play.svg', import.meta.url).href;
   hexBtn.innerHTML = `<svg class="pandero-hex-svg" viewBox="0 0 134.1427 142.32431" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <image href="${hexBordeUrl}" width="134.1427" height="142.32431"/>
     <g class="pandero-icon-play">
-      <image href="${playUrl}" x="37.12" y="35.06" width="60.41" height="66.52"/>
+      <polygon points="46,31 46,111 106,71" fill="white"/>
     </g>
     <g class="pandero-icon-pause" style="display:none">
       <path class="pandero-pause-bar" d="M 50 37 C 48 53, 51 75, 49 102"/>
