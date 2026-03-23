@@ -1,6 +1,6 @@
 /* =============================================================
    Pandero Widget — player.css
-   Visual identity: earthy/handmade, hexagon + circle motifs.
+   Visual identity: hand-drawn, hexagon motif, teal + black + white.
    All selectors prefixed pandero-* to avoid host page leakage.
    Scoped to #pandero-player; no :root tokens.
    ============================================================= */
@@ -21,16 +21,16 @@
    Host page may override any token for theming.
 --------------------------------------------------------------- */
 #pandero-player {
-  --pandero-bg:         #f5eedc;   /* off-white / goatskin */
-  --pandero-surface:    #3b1f0e;   /* dark brown / wood */
-  --pandero-accent:     #c4702b;   /* warm ochre */
-  --pandero-text:       #3b1f0e;   /* dark brown */
-  --pandero-track:      #c4a882;   /* mid ochre for slider tracks */
-  --pandero-font:       'Lora', serif;
-  --pandero-size-label: 1rem;
-  --pandero-size-value: 1.25rem;
-  --pandero-hex-size:   120px;
-  --pandero-gap:        1.25rem;
+  --pandero-bg:         #ffffff;
+  --pandero-surface:    #3f9087;   /* teal — exact color from Inkscape assets */
+  --pandero-accent:     #3f9087;   /* teal — slider thumb */
+  --pandero-text:       #1a1a1a;   /* near-black */
+  --pandero-track:      #d8d8d8;   /* light gray */
+  --pandero-font:       system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  --pandero-size-label: 0.875rem;
+  --pandero-size-value: 2rem;
+  --pandero-hex-size:   200px;
+  --pandero-gap:        1.5rem;
 }
 
 /* ---------------------------------------------------------------
@@ -60,31 +60,85 @@
 }
 
 /* ---------------------------------------------------------------
-   Hexagon play/stop button (D-05, D-06, D-08)
-   Handmade clip-path with vertex perturbation for imperfect feel.
-   120px wide × 0.866 tall ≈ 120px × 104px — well above 44px minimum.
+   Hexagon play/stop button — SVG-based, hand-drawn aesthetic.
+   Button is a transparent container; the SVG draws everything.
 --------------------------------------------------------------- */
 .pandero-play-btn {
-  width: var(--pandero-hex-size, 120px);
-  aspect-ratio: 1 / 0.866;
-  aspect-ratio: 1 / cos(30deg);
-  clip-path: polygon(51% 1%, 99% 24%, 100% 76%, 49% 99%, 1% 77%, 0% 25%);
-  background-color: var(--pandero-surface);
-  color: var(--pandero-bg);
+  width: var(--pandero-hex-size, 200px);
+  background: none;
   border: none;
   cursor: pointer;
-  font-size: 2rem;
-  font-family: var(--pandero-font);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.15s ease;
   padding: 0;
+  display: block;
+  transition: opacity 0.15s ease;
   flex-shrink: 0;
+}
+
+.pandero-play-btn:hover {
+  opacity: 0.88;
 }
 
 .pandero-play-btn:active {
   opacity: 0.75;
+}
+
+.pandero-play-btn:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+
+.pandero-play-btn:focus-visible {
+  outline: 3px solid var(--pandero-accent);
+  outline-offset: 4px;
+}
+
+.pandero-slider:focus-visible {
+  outline: 3px solid var(--pandero-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------
+   SVG hex — original Inkscape hand-drawn assets via <image>
+--------------------------------------------------------------- */
+.pandero-hex-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Pause bars — inline SVG paths */
+.pandero-pause-bar {
+  fill: none;
+  stroke: #000000;
+  stroke-width: 4.5px;
+  stroke-linecap: round;
+}
+
+/* ---------------------------------------------------------------
+   Beat indicator dots — two main pulses of 6/8 (beat 1 and beat 4)
+   Inactive: outline only. Active: filled teal with slight scale.
+--------------------------------------------------------------- */
+.pandero-beats {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+.pandero-beat {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--pandero-text);
+  background: transparent;
+  transition: background 0.08s ease, transform 0.08s ease;
+  flex-shrink: 0;
+}
+
+.pandero-beat-active {
+  background: var(--pandero-surface);
+  transform: scale(1.4);
 }
 
 /* ---------------------------------------------------------------
@@ -124,7 +178,8 @@
 --------------------------------------------------------------- */
 .pandero-value {
   font-size: var(--pandero-size-value);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* ---------------------------------------------------------------

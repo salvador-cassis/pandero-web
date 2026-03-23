@@ -49,6 +49,7 @@ function sliderRow(id, label, min, max, step, value, valId, valText) {
     const val = el('span', 'pandero-value');
     val.id = valId;
     val.textContent = valText;
+    val.setAttribute('aria-live', 'polite');
     header.appendChild(val);
   }
   const input = el('input');
@@ -69,14 +70,34 @@ function buildDOM() {
   const hexBtn = el('button', 'pandero-play-btn');
   hexBtn.setAttribute('type', 'button');
   hexBtn.setAttribute('aria-label', 'Reproducir / Detener');
-  hexBtn.textContent = '\u25B6'; // ▶
+  // SVG: loads original hand-drawn Inkscape assets.
+  // hex-borde.svg = teal hexagon fill + hand-drawn 6-sided frame (two offset layers for depth).
+  // borde-play.svg = play triangle (3 filled marker-stroke paths).
+  // Play position (37.12, 35.06) derived from canvas origin offset between both SVG exports.
+  const hexBordeUrl = new URL('./hex-borde.svg', import.meta.url).href;
+  const playUrl = new URL('./borde-play.svg', import.meta.url).href;
+  hexBtn.innerHTML = `<svg class="pandero-hex-svg" viewBox="0 0 134.1427 142.32431" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <image href="${hexBordeUrl}" width="134.1427" height="142.32431"/>
+    <g class="pandero-icon-play">
+      <image href="${playUrl}" x="37.12" y="35.06" width="60.41" height="66.52"/>
+    </g>
+    <g class="pandero-icon-pause" style="display:none">
+      <path class="pandero-pause-bar" d="M 50 37 C 48 53, 51 75, 49 102"/>
+      <path class="pandero-pause-bar" d="M 81 36 C 79 53, 82 75, 82 103"/>
+    </g>
+  </svg>`;
+
+  const beatRow = el('div', 'pandero-beats');
+  const beat0 = el('span', 'pandero-beat'); beat0.setAttribute('aria-hidden', 'true');
+  const beat1 = el('span', 'pandero-beat'); beat1.setAttribute('aria-hidden', 'true');
+  beatRow.append(beat0, beat1);
 
   const controls = el('div', 'pandero-controls');
   controls.append(
-    sliderRow('tempo', null, 0.5, 1.5, 0.01, 1.009, 'pandero-tempo-val', '112 BPM')
+    sliderRow('tempo', 'Tempo', 0.5, 1.5, 0.01, 1.009, 'pandero-tempo-val', '112 BPM')
   );
 
-  root.append(hexBtn, controls);
+  root.append(hexBtn, beatRow, controls);
   return root;
 }
 
@@ -96,6 +117,12 @@ let source = null;
 let audioBuffer = null;
 let isInitialized = false;  // ENG-05 guard: AudioContext created only once, inside gesture
 let isPlaying = false;
+let animFrame = null;
+let lastBeatIdx = -1;
+let playbackStartCtxTime = 0;
+let accumulatedBufferTime = 0;  // buffer-time odometer: accumulates on every ratio change
+let lastTempoChangeCtxTime = 0; // audioCtx.currentTime at last ratio change
+let currentRatio = 1.009;       // mirrors the slider, kept in sync by handleTempoChange
 
 // ---------------------------------------------------------------------------
 // init() — called exclusively inside togglePlayback(), which is a click handler.
@@ -163,7 +190,43 @@ async function startPlayback() {
   source.connect(stNode);
   stNode.parameters.get('playbackRate').value = ratio;  // processor divides pitch by this automatically
 
+  playbackStartCtxTime = audioCtx.currentTime;
+  accumulatedBufferTime = 0;
+  lastTempoChangeCtxTime = audioCtx.currentTime;
+  currentRatio = parseFloat(document.getElementById('pandero-tempo').value);
   source.start();
+  startBeatAnim();
+}
+
+// ---------------------------------------------------------------------------
+// Beat animation — visual pulse on the two main pulses of the 6/8 bar.
+// Beat 1 = buffer start, Beat 4 = buffer midpoint (user-confirmed split).
+// requestAnimationFrame polls audioCtx.currentTime — no setTimeout drift.
+// ---------------------------------------------------------------------------
+function startBeatAnim() {
+  lastBeatIdx = -1;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(animLoop);
+}
+
+function stopBeatAnim() {
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  lastBeatIdx = -1;
+  root.querySelectorAll('.pandero-beat').forEach(d => d.classList.remove('pandero-beat-active'));
+}
+
+function animLoop() {
+  if (!isPlaying || !audioBuffer) return;
+  const elapsed = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
+  const posInBuffer = elapsed % audioBuffer.duration;
+  const beatIdx = Math.floor(posInBuffer / (audioBuffer.duration / 4)) % 2;
+  if (beatIdx !== lastBeatIdx) {
+    lastBeatIdx = beatIdx;
+    root.querySelectorAll('.pandero-beat').forEach((d, i) => {
+      d.classList.toggle('pandero-beat-active', i === beatIdx);
+    });
+  }
+  animFrame = requestAnimationFrame(animLoop);
 }
 
 // ---------------------------------------------------------------------------
@@ -184,12 +247,17 @@ async function togglePlayback() {
     await audioCtx.resume();
     await startPlayback();
     isPlaying = true;
-    hexBtn.textContent = '\u23F8';  // ⏸
+    hexBtn.querySelector('.pandero-icon-play').style.display = 'none';
+    hexBtn.querySelector('.pandero-icon-pause').style.display = '';
+    hexBtn.setAttribute('aria-label', 'Detener');
   } else {
     if (source) { source.stop(); source.disconnect(); source = null; }
     if (stNode) { stNode.disconnect(); stNode = null; }
     isPlaying = false;
-    hexBtn.textContent = '\u25B6';  // ▶
+    stopBeatAnim();
+    hexBtn.querySelector('.pandero-icon-play').style.display = '';
+    hexBtn.querySelector('.pandero-icon-pause').style.display = 'none';
+    hexBtn.setAttribute('aria-label', 'Reproducir');
   }
 }
 
@@ -202,6 +270,12 @@ function handleTempoChange(e) {
   const ratio = parseFloat(e.target.value);
   document.getElementById('pandero-tempo-val').textContent = Math.round(ratio * 111) + ' BPM';
   if (!source || !stNode) return;
+  // Odometer: commit elapsed buffer-time at the old ratio before switching.
+  if (isPlaying && audioCtx) {
+    accumulatedBufferTime += (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
+    lastTempoChangeCtxTime = audioCtx.currentTime;
+    currentRatio = ratio;
+  }
   source.playbackRate.value = ratio;
   stNode.parameters.get('playbackRate').value = ratio;
 }
@@ -215,8 +289,11 @@ hexBtn.addEventListener('click', togglePlayback);
 tempoSlider.addEventListener('input', handleTempoChange);
 
 // Space key: same as clicking the toggle button.
+// Guard: skip if focus is inside a text input to avoid conflicting with host page forms.
 document.addEventListener('keydown', async (e) => {
   if (e.code === 'Space') {
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
     e.preventDefault();
     await togglePlayback();
   }
