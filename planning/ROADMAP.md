@@ -62,16 +62,17 @@ Plans:
 - [x] 03-02-PLAN.md — Widget JS migration and embedding (migrate poc.js to player.js with programmatic DOM creation inside #pandero-player, pandero-* prefixed IDs, direct CDN URL for unmute-ios-audio eliminating importmap, reset button removed, import.meta.url for asset resolution)
 
 ### Phase 4: Cueca-Specific UX Refinements
-**Goal**: The tool communicates from first load that it is built for cueca — the default tempo and vocabulary labels speak directly to the target community
+**Goal**: The widget feels purpose-built for cueca from first load — default tempo, simplified single-slider layout, and refined typography communicate the tool's identity
 **Depends on**: Phase 3
 **Requirements**: CUE-01, CUE-02
 **Success Criteria** (what must be TRUE):
-  1. On first load (before any interaction), the tempo slider is set to a cueca-appropriate default (~90–100 BPM) and the BPM display reflects that value
-  2. The tempo slider shows vocabulary labels at meaningful positions: "lento", "normal", "animado" aligned to their approximate BPM positions
+  1. On first load (before any interaction), the tempo slider is set to 112 BPM and the BPM display reflects that value
+  2. Only one slider (tempo) remains — pitch and volume controls are permanently removed
+  3. The widget renders in Lora font with increased label/value sizes for legibility
 **Plans**: 1 plan
 
 Plans:
-- [ ] 04-01: Default tempo and vocabulary labels (set initial tempo to cueca default on mount, add "lento / normal / animado" labels to tempo slider at ~70 / ~95 / ~120 BPM positions)
+- [x] 04-01-PLAN.md — Default tempo, control simplification, and Lora typography (set initial tempo to 112 BPM, remove pitch and volume sliders permanently, remove "Tempo" label, replace Caveat with Lora font, increase font sizes)
 
 ## Progress
 
@@ -83,7 +84,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 | 1. Audio Engine Foundation | 2/3 | In Progress|  |
 | 2. Playback Controls and Core UI | 0/2 | Not started | - |
 | 3. Mobile Polish and Embedding | 2/2 | Complete | 2026-03-22 |
-| 4. Cueca-Specific UX Refinements | 0/2 | Not started | - |
+| 4. Cueca-Specific UX Refinements | 0/1 | Not started | - |
 
 ---
 
@@ -109,7 +110,7 @@ Phases execute in strict numeric order. Phase 1 must be verified on real iOS har
 | UI-03 | Phase 3 | UI y Embedding |
 | UI-04 | Phase 3 | UI y Embedding |
 | CUE-01 | Phase 4 | Cueca UX |
-| CUE-02 | Phase 4 | Cueca UX |
+| CUE-02 | Phase 4 | Cueca UX (deferred — vocabulary labels not needed yet per user decision) |
 
 **v1 requirements mapped: 19/19. No orphans.**
 

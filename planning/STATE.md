@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0.8
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-03-22T23:50:54.993Z"
+status: Executing Phase 04
+last_updated: "2026-03-23T00:31:13.003Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
 ---
 
 # Project State
@@ -19,14 +19,14 @@ See: planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** El músico puede cambiar pitch y tempo de forma independiente sin que uno afecte al otro, para practicar cueca en cualquier nivel y contexto.
 
-**Current focus:** Phase 03 — Mobile Polish and Embedding
+**Current focus:** Phase 04 — cueca-specific-ux-refinements
 
 ## Current Status
 
 - Milestone: v1
-- Active phase: 03-mobile-polish-and-embedding
-- Current plan: 04-01 (phase 03 complete, ready for phase 04)
-- Last session: Completed 03-02 — human-verify approved, widget JS migration complete (2026-03-22)
+- Active phase: 04-cueca-specific-ux-refinements
+- Current plan: 04-01 (tasks 1-2 complete, awaiting Task 3 checkpoint:human-verify)
+- Last session: Completed 04-01 tasks 1-2 — Lora font, single 112 BPM slider (2026-03-23)
 
 ## Phase Progress
 
@@ -35,7 +35,7 @@ See: planning/PROJECT.md (updated 2026-03-22)
 | 1 | Audio Engine Foundation | ◑ In Progress | 2/3 |
 | 2 | Playback Controls and Core UI | ○ Pending | 0/2 |
 | 3 | Mobile Polish and Embedding | ● Complete | 2/2 |
-| 4 | Cueca-Specific UX Refinements | ○ Pending | 0/1 |
+| 4 | Cueca-Specific UX Refinements | ◑ In Progress | 0/1 |
 
 ## Decisions
 
@@ -50,6 +50,9 @@ See: planning/PROJECT.md (updated 2026-03-22)
 - [Phase 03-02]: Direct CDN URL (esm.sh) for unmute-ios-audio — host pages need no importmap (UI-03)
 - [Phase 03-02]: import.meta.url for MP3 and worklet addModule() — resolves relative to widget file, not host page
 - [Phase 03-02]: Reset button excluded from widget per D-13 — intentional scope reduction for embeddable widget
+- [Phase 04]: Default tempo set to 112 BPM (ratio 1.009) for cueca performance tempo
+- [Phase 04]: Pitch and volume sliders permanently removed — single focused control widget
+- [Phase 04]: Lora font replaces Caveat — calligraphic warmth with legibility, self-hosted woff2
 
 ## Notes
 
@@ -62,5 +65,7 @@ See: planning/PROJECT.md (updated 2026-03-22)
 - Plan 03-02 complete — human browser verification approved; widget plays, sliders update live, no console errors
 - Phase 3 complete — two-line embed contract fulfilled (div + script + CSS link)
 
+- Plan 04-01 tasks 1-2 complete — Lora font self-hosted, single tempo slider at 112 BPM, pitch/volume removed (2026-03-23)
+
 ---
-*Last updated: 2026-03-22 — plan 03-02 complete, phase 03 complete*
+*Last updated: 2026-03-23 — plan 04-01 tasks 1-2 complete, awaiting Task 3 human verify*

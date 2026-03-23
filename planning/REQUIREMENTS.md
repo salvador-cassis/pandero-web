@@ -36,7 +36,7 @@
 
 ### Cueca UX
 
-- [ ] **CUE-01**: El tempo por defecto al cargar refleja el rango típico de la cueca (~90–100 BPM)
+- [x] **CUE-01**: El tempo por defecto al cargar refleja el rango típico de la cueca (~90–100 BPM)
 - [ ] **CUE-02**: El slider de tempo muestra etiquetas de vocabulario cuequero ("lento / normal / animado")
 
 ## v2 Requirements
@@ -88,7 +88,7 @@
 | UI-02 | Phase 3 | Complete |
 | UI-03 | Phase 3 | Pending |
 | UI-04 | Phase 3 | Pending |
-| CUE-01 | Phase 4 | Pending |
+| CUE-01 | Phase 4 | Complete |
 | CUE-02 | Phase 4 | Pending |
 
 **Coverage:**
