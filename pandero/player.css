@@ -6,11 +6,11 @@
    ============================================================= */
 
 /* ---------------------------------------------------------------
-   Self-hosted font — Caveat Regular (handwritten aesthetic)
+   Self-hosted font — Lora Regular (calligraphic warmth, legible)
 --------------------------------------------------------------- */
 @font-face {
-  font-family: 'Caveat';
-  src: url('./caveat-regular.woff2') format('woff2');
+  font-family: 'Lora';
+  src: url('./lora-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -26,9 +26,9 @@
   --pandero-accent:     #c4702b;   /* warm ochre */
   --pandero-text:       #3b1f0e;   /* dark brown */
   --pandero-track:      #c4a882;   /* mid ochre for slider tracks */
-  --pandero-font:       'Caveat', cursive;
-  --pandero-size-label: 0.9rem;
-  --pandero-size-value: 1.1rem;
+  --pandero-font:       'Lora', serif;
+  --pandero-size-label: 1rem;
+  --pandero-size-value: 1.25rem;
   --pandero-hex-size:   120px;
   --pandero-gap:        1.25rem;
 }
@@ -88,7 +88,7 @@
 }
 
 /* ---------------------------------------------------------------
-   Controls container — three sliders stacked vertically (D-09, D-10)
+   Controls container — tempo slider (single control) (D-09, D-10)
 --------------------------------------------------------------- */
 .pandero-controls {
   display: flex;
