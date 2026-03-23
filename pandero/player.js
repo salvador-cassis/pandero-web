@@ -368,7 +368,7 @@ function stopBeatAnim() {
   if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
   lastBeatIdx = -1;
   root.querySelectorAll('.pandero-beat').forEach(d => d.classList.remove('pandero-beat-active'));
-  hexBtn.querySelector('.pandero-hex-svg')?.classList.remove('pandero-hex-beat');
+  hexBtn.querySelector('.pandero-hex-svg')?.getAnimations().forEach(a => a.cancel());
 }
 
 function animLoop() {
@@ -381,11 +381,12 @@ function animLoop() {
     root.querySelectorAll('.pandero-beat').forEach((d, i) => {
       d.classList.toggle('pandero-beat-active', i === beatIdx);
     });
-    // Flash the hexagon: remove → force reflow → re-add restarts the keyframe.
-    const svg = hexBtn.querySelector('.pandero-hex-svg');
-    svg.classList.remove('pandero-hex-beat');
-    void svg.offsetWidth;
-    svg.classList.add('pandero-hex-beat');
+    // Flash the hexagon via Web Animations API — creates a new Animation
+    // object on every beat so it always fires, no reflow tricks needed.
+    hexBtn.querySelector('.pandero-hex-svg').animate(
+      [{ filter: 'brightness(1.5)' }, { filter: 'brightness(1)' }],
+      { duration: 280, easing: 'ease-out' }
+    );
   }
   animFrame = requestAnimationFrame(animLoop);
 }

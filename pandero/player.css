@@ -107,16 +107,7 @@
   height: auto;
 }
 
-/* Beat flash: fired on every beat 1 and beat 4 via JS class toggle.
-   Brightness spike + immediate fade-out; animation restarted each beat. */
-@keyframes pandero-hex-flash {
-  0%   { filter: brightness(1.45); }
-  100% { filter: brightness(1); }
-}
-
-.pandero-hex-svg.pandero-hex-beat {
-  animation: pandero-hex-flash 0.28s ease-out forwards;
-}
+/* Beat flash is driven by Web Animations API in player.js — no CSS class needed. */
 
 /* Pause bars — inline SVG paths */
 .pandero-pause-bar {
