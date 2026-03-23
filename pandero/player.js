@@ -1,5 +1,5 @@
 // player.js — Pandero Widget: self-mounting ES module
-// Phase 3: Mobile Polish and Embedding
+// Phase 4: Cueca-Specific UX Refinements
 // Migrated from poc.js — audio engine preserved exactly; DOM is programmatic.
 
 // SECTION A: Guards and imports
@@ -39,10 +39,12 @@ function el(tag, className) {
 function sliderRow(id, label, min, max, step, value, valId, valText) {
   const row = el('div', 'pandero-slider-row');
   const header = el('div', 'pandero-slider-header');
-  const lbl = el('label');
-  lbl.textContent = label;
-  lbl.htmlFor = 'pandero-' + id;
-  header.appendChild(lbl);
+  if (label) {
+    const lbl = el('label');
+    lbl.textContent = label;
+    lbl.htmlFor = 'pandero-' + id;
+    header.appendChild(lbl);
+  }
   if (valId) {
     const val = el('span', 'pandero-value');
     val.id = valId;
@@ -71,9 +73,7 @@ function buildDOM() {
 
   const controls = el('div', 'pandero-controls');
   controls.append(
-    sliderRow('tempo',  'Tempo',   0.5, 1.5, 0.01, 1.0, 'pandero-tempo-val', '111 BPM'),
-    sliderRow('pitch',  'Pitch',  -6,   6,   1,    0,   'pandero-pitch-val', '0 st'),
-    sliderRow('volume', 'Volumen', 0,   1,   0.01, 1.0,  null, null)
+    sliderRow('tempo', null, 0.5, 1.5, 0.01, 1.009, 'pandero-tempo-val', '112 BPM')
   );
 
   root.append(hexBtn, controls);
@@ -163,9 +163,6 @@ async function startPlayback() {
   source.connect(stNode);
   stNode.parameters.get('playbackRate').value = ratio;  // processor divides pitch by this automatically
 
-  // ENG-03: Independent pitch shift in semitones (integer steps, -6 to +6 for this UI).
-  stNode.parameters.get('pitchSemitones').value = parseInt(document.getElementById('pandero-pitch').value);
-
   source.start();
 }
 
@@ -210,36 +207,12 @@ function handleTempoChange(e) {
 }
 
 // ---------------------------------------------------------------------------
-// handlePitchChange — ENG-03: independent semitone shift.
-// VIS-02, D-13: signed display (0, +N, -N).
-// ---------------------------------------------------------------------------
-function handlePitchChange(e) {
-  const n = parseInt(e.target.value);
-  document.getElementById('pandero-pitch-val').textContent = (n === 0 ? '0' : (n > 0 ? '+' + n : '' + n)) + ' st';
-  if (!stNode) return;
-  stNode.parameters.get('pitchSemitones').value = n;
-}
-
-// ---------------------------------------------------------------------------
-// handleVolumeChange — CTRL-04, D-15, D-16: volume via GainNode.
-// gainNode persists across restarts so volume is preserved.
-// ---------------------------------------------------------------------------
-function handleVolumeChange(e) {
-  if (!gainNode) return;
-  gainNode.gain.value = parseFloat(e.target.value);
-}
-
-// ---------------------------------------------------------------------------
 // Event wiring
 // ---------------------------------------------------------------------------
 const tempoSlider = document.getElementById('pandero-tempo');
-const pitchSlider = document.getElementById('pandero-pitch');
-const volumeSlider = document.getElementById('pandero-volume');
 
 hexBtn.addEventListener('click', togglePlayback);
 tempoSlider.addEventListener('input', handleTempoChange);
-pitchSlider.addEventListener('input', handlePitchChange);
-volumeSlider.addEventListener('input', handleVolumeChange);
 
 // Space key: same as clicking the toggle button.
 document.addEventListener('keydown', async (e) => {
