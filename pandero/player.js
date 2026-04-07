@@ -144,7 +144,10 @@ const NUM_GRID        = 24;     // equal segments per loop
 const SLICE_LOOKAHEAD = 0.25;   // seconds ahead to schedule (latency buffer)
 const SLICE_INTERVAL  = 100;    // scheduler poll interval (ms)
 
-let sliceBeatQueue = [];   // [{when, idx}] — beat events from scheduleSlices() for animLoop
+let sliceBeatQueue  = [];   // [{when, idx}] — beat events from scheduleSlices() for animLoop
+let measureBoundary = null; // actual buffer position of beat 1 of compás 2 (golpe near 50%)
+let c1BeatGrid = null;      // [pos0..pos5] — actual beat start positions for compás 1
+let c2BeatGrid = null;      // [pos0..pos5] — actual beat start positions for compás 2
 let sliceMode    = false;   // true when slice scheduler is active
 let sliceTimer   = null;    // setInterval handle
 let nextSliceIdx = 0;       // next grid segment index to schedule
@@ -282,7 +285,7 @@ function scheduleSlices() {
     // Beat queue: push a {when, idx} entry whenever the beat index changes.
     // animLoop drains this queue against audioCtx.currentTime so the visual
     // fires at the exact moment the audio plays — not from the continuous odometer.
-    const bIdx  = Math.floor(offset / (bufDur / 12)) % 6;
+    const bIdx  = posToBeatIdx(offset);
     const lastQ = sliceBeatQueue.length ? sliceBeatQueue[sliceBeatQueue.length - 1].idx : lastBeatIdx;
     if (bIdx !== lastQ) sliceBeatQueue.push({ when: nextSliceWhen, idx: bIdx });
 
@@ -316,6 +319,16 @@ async function init() {
 
   // Detect pandero hit positions for slice mode (runs synchronously, < 5ms).
   sliceHits = findTransients(audioBuffer);
+
+  // Find actual beat-4 position (golpe del segundo compás) from detected hits.
+  // The recording's second measure may not start at exactly 50% — this anchors
+  // the beat grid to the real hit, fixing the displacement in compás 2.
+  measureBoundary = findMeasureBoundary(audioBuffer.duration, sliceHits);
+  c1BeatGrid = buildCompasGrid(sliceHits, 0,               measureBoundary);
+  c2BeatGrid = buildCompasGrid(sliceHits, measureBoundary, audioBuffer.duration);
+  console.log('[pandero] boundary:', measureBoundary.toFixed(3) + 's',
+    '| C1:', c1BeatGrid.map(t => t.toFixed(3)).join(' '),
+    '| C2:', c2BeatGrid.map(t => t.toFixed(3)).join(' '));
 
   // GainNode created once in init() — persists across startPlayback() restarts.
   // stNode connects to gainNode on each startPlayback(); gainNode routes to destination.
@@ -372,8 +385,72 @@ function startPlayback() {
 }
 
 // ---------------------------------------------------------------------------
-// Beat animation — visual pulse on the two main pulses of the 6/8 bar.
-// Beat 1 = buffer start, Beat 4 = buffer midpoint (user-confirmed split).
+// buildCompasGrid(hits, start, end) — build 6-slot beat grid from actual hits.
+// Beat 0 is always anchored to `start`. Remaining hits are assigned to the
+// nearest beat slot; empty slots fall back to equal division.
+// Skips hits within half a beat interval of `start` (those belong to beat 0).
+// Returns array of 6 absolute buffer positions [pos0, pos1, …, pos5].
+// ---------------------------------------------------------------------------
+function buildCompasGrid(hits, start, end) {
+  const dur      = end - start;
+  const interval = dur / 6;
+  const grid     = [start, null, null, null, null, null]; // beat 0 = compás start
+
+  for (const h of hits) {
+    const rel = h - start;
+    if (rel < interval * 0.5) continue;   // too close to beat 0
+    const beat = Math.round(rel / interval);
+    const b    = Math.max(1, Math.min(5, beat));
+    if (grid[b] === null) grid[b] = h;    // first hit per slot wins
+  }
+  // Fill any remaining empty slots with equal division
+  for (let b = 1; b < 6; b++) {
+    if (grid[b] === null) grid[b] = start + b * interval;
+  }
+  return grid;
+}
+
+// ---------------------------------------------------------------------------
+// findMeasureBoundary(bufDur, hits) — locate the actual start of compás 2.
+// Strategy: find the hit with the LARGEST preceding gap in the [30%,70%] window.
+// The golpe follows the end of the trémulo (a pause), so its preceding gap is
+// larger than the tightly-packed trémulo hits (80 ms minimum).
+// Falls back to 50% if no hit is in the window.
+// ---------------------------------------------------------------------------
+function findMeasureBoundary(bufDur, hits) {
+  if (hits.length === 0) return bufDur / 2;
+  const lo = bufDur * 0.30;
+  const hi = bufDur * 0.70;
+  let best = bufDur / 2, bestGap = -1;
+  for (let i = 1; i < hits.length; i++) {
+    const h = hits[i];
+    if (h < lo || h > hi) continue;
+    const gap = h - hits[i - 1];
+    if (gap > bestGap) { bestGap = gap; best = h; }
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------
+// posToBeatIdx(pos) — map a buffer position (seconds) to a beat index 0–5.
+// Each compás has 6 equal beats; measureBoundary is the true start of compás 2.
+//   compás 1: [0, split)      → beats 0–5 (sixths of split)
+//   compás 2: [split, bufDur) → beats 0–5 (sixths of remaining duration)
+// Dots 0–5 cycle once per compás (twice per loop).
+// ---------------------------------------------------------------------------
+function posToBeatIdx(pos) {
+  const split = measureBoundary ?? audioBuffer.duration / 2;
+  const grid  = pos < split ? c1BeatGrid : c2BeatGrid;
+  if (!grid) return 0;
+  for (let i = 5; i >= 0; i--) {
+    if (pos >= grid[i]) return i;
+  }
+  return 0;
+}
+
+// ---------------------------------------------------------------------------
+// Beat animation — visual pulse on the 6 beats of the cueca bar.
+// measureBoundary anchors compás 2 to the actual golpe in the recording.
 // requestAnimationFrame polls audioCtx.currentTime — no setTimeout drift.
 // ---------------------------------------------------------------------------
 function startBeatAnim() {
@@ -418,7 +495,7 @@ function animLoop() {
     // WSOLA mode: continuous odometer gives exact buffer position.
     const elapsed     = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
     const posInBuffer = elapsed % audioBuffer.duration;
-    fireBeat(Math.floor(posInBuffer / (audioBuffer.duration / 12)) % 6);
+    fireBeat(posToBeatIdx(posInBuffer));
   }
 
   animFrame = requestAnimationFrame(animLoop);
