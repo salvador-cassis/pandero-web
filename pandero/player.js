@@ -433,19 +433,12 @@ function findMeasureBoundary(bufDur, hits) {
 
 // ---------------------------------------------------------------------------
 // posToBeatIdx(pos) — map a buffer position (seconds) to a beat index 0–5.
-// Each compás has 6 equal beats; measureBoundary is the true start of compás 2.
-//   compás 1: [0, split)      → beats 0–5 (sixths of split)
-//   compás 2: [split, bufDur) → beats 0–5 (sixths of remaining duration)
-// Dots 0–5 cycle once per compás (twice per loop).
+// Pure equal division: 12 equal slots across the full buffer (6 per compás).
+// Metronomic — no groove, no transient influence. Dots cycle once per compás.
 // ---------------------------------------------------------------------------
 function posToBeatIdx(pos) {
-  const split = measureBoundary ?? audioBuffer.duration / 2;
-  const grid  = pos < split ? c1BeatGrid : c2BeatGrid;
-  if (!grid) return 0;
-  for (let i = 5; i >= 0; i--) {
-    if (pos >= grid[i]) return i;
-  }
-  return 0;
+  const beatDur = audioBuffer.duration / 12;
+  return Math.floor(pos / beatDur) % 6;
 }
 
 // ---------------------------------------------------------------------------
@@ -473,8 +466,11 @@ function fireBeat(idx) {
     d.classList.toggle('pandero-beat-active', i === idx);
   });
   // Main beats (1 and 4): strong flash. Subdivisions (2,3,5,6): subtle flash.
+  // Cancel stale animations so fast-tempo pulses don't bleed into a slower tempo.
   const isMainBeat = idx === 0 || idx === 3;
-  hexBtn.querySelector('.pandero-hex-svg').animate(
+  const hexSvg = hexBtn.querySelector('.pandero-hex-svg');
+  hexSvg.getAnimations().forEach(a => a.cancel());
+  hexSvg.animate(
     [{ filter: isMainBeat ? 'brightness(1.5)' : 'brightness(1.2)' }, { filter: 'brightness(1)' }],
     { duration: isMainBeat ? 280 : 160, easing: 'ease-out' }
   );
@@ -483,20 +479,11 @@ function fireBeat(idx) {
 function animLoop() {
   if (!isPlaying || !audioBuffer) return;
 
-  if (sliceMode) {
-    // Slice mode: beat driven by the scheduler queue, not the odometer.
-    // Each entry carries the precise AudioContext timestamp of the slice that
-    // marks a beat change — so the visual fires when the audio actually plays.
-    const now = audioCtx.currentTime;
-    while (sliceBeatQueue.length && sliceBeatQueue[0].when <= now) {
-      fireBeat(sliceBeatQueue.shift().idx);
-    }
-  } else {
-    // WSOLA mode: continuous odometer gives exact buffer position.
-    const elapsed     = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
-    const posInBuffer = elapsed % audioBuffer.duration;
-    fireBeat(posToBeatIdx(posInBuffer));
-  }
+  // Metronomic animation: odometer gives buffer position, equal-division maps
+  // it to beat 0–5. Constant, no groove influence, works in both modes.
+  const elapsed     = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
+  const posInBuffer = elapsed % audioBuffer.duration;
+  fireBeat(posToBeatIdx(posInBuffer));
 
   animFrame = requestAnimationFrame(animLoop);
 }
@@ -587,8 +574,11 @@ function handleTempoChange(e) {
       scheduleSlices();
       sliceTimer = setInterval(scheduleSlices, SLICE_INTERVAL);
     } else {
-      // Slice → WSOLA: slice segments are very short; startPlayback is clean enough.
+      // Slice → WSOLA: startPlayback resets the odometer to 0, which would
+      // cause a beat jump. Save and restore so animation stays continuous.
+      const savedAccum = accumulatedBufferTime;
       startPlayback();
+      accumulatedBufferTime = savedAccum;
     }
     return;
   }
