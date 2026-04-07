@@ -118,29 +118,62 @@
 }
 
 /* ---------------------------------------------------------------
-   Beat indicator dots — two main pulses of 6/8 (beat 1 and beat 4)
+   Beat indicator dots — 6 beats of cueca (3/4 – 6/8):
+   Two groups of three: [pulse · sub · sub] [pulse · sub · sub]
+   Beats 1 and 4 are the main pulses; 2,3,5,6 are ternary accents.
    Inactive: outline only. Active: filled teal with slight scale.
 --------------------------------------------------------------- */
 .pandero-beats {
   display: flex;
-  gap: 14px;
+  gap: 20px;
   align-items: center;
   justify-content: center;
 }
 
+.pandero-beat-group {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
 .pandero-beat {
-  width: 9px;
-  height: 9px;
   border-radius: 50%;
   border: 2px solid var(--pandero-text);
   background: transparent;
-  transition: background 0.08s ease, transform 0.08s ease;
+  transition: background 0.06s ease, transform 0.06s ease;
   flex-shrink: 0;
+}
+
+.pandero-beat-main {
+  width: 11px;
+  height: 11px;
+}
+
+.pandero-beat-sub {
+  width: 7px;
+  height: 7px;
+  border-width: 1.5px;
+  opacity: 0.65;
 }
 
 .pandero-beat-active {
   background: var(--pandero-surface);
-  transform: scale(1.4);
+  transform: scale(1.35);
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------
+   Slider end labels — "lento" / "rápido" below the track
+--------------------------------------------------------------- */
+.pandero-slider-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  font-style: italic;
+  color: var(--pandero-text);
+  opacity: 0.45;
+  letter-spacing: 0.04em;
+  margin-top: -0.25rem;
 }
 
 /* ---------------------------------------------------------------

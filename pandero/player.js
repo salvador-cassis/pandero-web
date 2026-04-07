@@ -86,14 +86,25 @@ function buildDOM() {
   </svg>`;
 
   const beatRow = el('div', 'pandero-beats');
-  const beat0 = el('span', 'pandero-beat'); beat0.setAttribute('aria-hidden', 'true');
-  const beat1 = el('span', 'pandero-beat'); beat1.setAttribute('aria-hidden', 'true');
-  beatRow.append(beat0, beat1);
+  // Two groups of 3: [pulse · sub · sub] [pulse · sub · sub]
+  // Beats 1 and 4 are the main pulses; 2,3,5,6 are ternary subdivisions.
+  [0, 1].forEach(() => {
+    const group = el('div', 'pandero-beat-group');
+    const pulse = el('span', 'pandero-beat pandero-beat-main'); pulse.setAttribute('aria-hidden', 'true');
+    const sub1  = el('span', 'pandero-beat pandero-beat-sub');  sub1.setAttribute('aria-hidden', 'true');
+    const sub2  = el('span', 'pandero-beat pandero-beat-sub');  sub2.setAttribute('aria-hidden', 'true');
+    group.append(pulse, sub1, sub2);
+    beatRow.appendChild(group);
+  });
 
   const controls = el('div', 'pandero-controls');
-  controls.append(
-    sliderRow('tempo', 'Tempo', 0.5, 1.5, 0.01, 1.009, 'pandero-tempo-val', '112 BPM')
-  );
+  const tempoRow = sliderRow('tempo', 'Tempo', 0.5, 1.5, 0.01, 1.009, 'pandero-tempo-val', '112 BPM');
+  const sliderEnds = el('div', 'pandero-slider-ends');
+  const slowLbl = el('span'); slowLbl.textContent = 'lento';
+  const fastLbl = el('span'); fastLbl.textContent = 'rápido';
+  sliderEnds.append(slowLbl, fastLbl);
+  tempoRow.appendChild(sliderEnds);
+  controls.append(tempoRow);
 
   root.append(hexBtn, beatRow, controls);
   return root;
@@ -133,6 +144,7 @@ const NUM_GRID        = 24;     // equal segments per loop
 const SLICE_LOOKAHEAD = 0.25;   // seconds ahead to schedule (latency buffer)
 const SLICE_INTERVAL  = 100;    // scheduler poll interval (ms)
 
+let sliceBeatQueue = [];   // [{when, idx}] — beat events from scheduleSlices() for animLoop
 let sliceMode    = false;   // true when slice scheduler is active
 let sliceTimer   = null;    // setInterval handle
 let nextSliceIdx = 0;       // next grid segment index to schedule
@@ -184,9 +196,50 @@ function findTransients(buffer) {
       lastF = f;
     }
   }
-  console.log('[pandero] transients detected:', hits.length,
-    '—', hits.map(t => t.toFixed(3) + 's').join('  '));
-  return hits;
+  // Post-process: merge consecutive close hits with continuous energy between them.
+  // A trill/roll keeps significant energy at the midpoint; discrete hits decay rapidly.
+  const MERGE_WIN_SEC = 0.50;  // only consider merging hits ≤ 500ms apart
+  const TRILL_RATIO   = 0.18;  // merge if midpoint RMS > 18% of onset RMS
+  const WIN20 = Math.floor(0.010 * sr);  // 10 ms window for energy check
+
+  const merged = hits.length ? [hits[0]] : [];
+  for (let i = 1; i < hits.length; i++) {
+    const prev = merged[merged.length - 1];
+    const gap  = hits[i] - prev;
+    if (gap < MERGE_WIN_SEC) {
+      const midS  = Math.floor(((prev + hits[i]) * 0.5) * sr);
+      const prevS = Math.floor(prev * sr);
+      const hit2S = Math.floor(hits[i] * sr);
+      let midE = 0, prevE = 0, hit2E = 0;
+      for (let k = 0; k < WIN20; k++) {
+        const mv  = midS  + k < data.length ? data[midS  + k] : 0;
+        const pv  = prevS + k < data.length ? data[prevS + k] : 0;
+        const h2v = hit2S + k < data.length ? data[hit2S + k] : 0;
+        midE  += mv  * mv;
+        prevE += pv  * pv;
+        hit2E += h2v * h2v;
+      }
+      // Two merge criteria — either triggers a merge:
+      // 1. High continuous energy (trill roll): midRMS > 18% of onset RMS.
+      const highContinuous = midE > TRILL_RATIO * TRILL_RATIO * prevE;
+      // 2. Quiet midpoint + loud first onset (golpe→trill boundary):
+      //    the golpe decays fully before the softer trill begins, leaving a
+      //    near-silent midpoint (midRMS/hit2RMS ≈ 0.12 measured). Discrete
+      //    golpes have similar strength (prevRMS/hit2RMS < 1.3) and a louder
+      //    midpoint relative to the next onset (≥ 0.19 measured), so both
+      //    sub-conditions must hold to avoid false merges on the 3-golpe group.
+      const lowMidpoint    = midE < 0.15 * 0.15 * hit2E   // midpoint quiet vs trill onset
+                          && prevE > 1.3  * 1.3  * hit2E;  // golpe louder than trill onset
+      if (highContinuous || lowMidpoint) {
+        continue;  // absorb into previous segment
+      }
+    }
+    merged.push(hits[i]);
+  }
+
+  console.log('[pandero] transients:', hits.length, '→ merged:', merged.length,
+    '—', merged.map(t => t.toFixed(3) + 's').join('  '));
+  return merged;
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +254,7 @@ function stopCurrentPlayback() {
   if (sliceTimer) { clearInterval(sliceTimer); sliceTimer = null; }
   activeSources.forEach(s => { try { s.stop(); s.disconnect(); } catch (_) {} });
   activeSources = [];
+  sliceBeatQueue = [];
 }
 
 // ---------------------------------------------------------------------------
@@ -266,6 +320,13 @@ function scheduleSlices() {
       const i = activeSources.indexOf(node);
       if (i !== -1) activeSources.splice(i, 1);
     };
+    // Beat queue: push a {when, idx} entry whenever the beat index changes.
+    // animLoop drains this queue against audioCtx.currentTime so the visual
+    // fires at the exact moment the audio plays — not from the continuous odometer.
+    const bIdx  = Math.floor(offset / (bufDur / 12)) % 6;
+    const lastQ = sliceBeatQueue.length ? sliceBeatQueue[sliceBeatQueue.length - 1].idx : lastBeatIdx;
+    if (bIdx !== lastQ) sliceBeatQueue.push({ when: nextSliceWhen, idx: bIdx });
+
     nextSliceIdx++;
     nextSliceWhen += dur / currentRatio;
   }
@@ -369,23 +430,38 @@ function stopBeatAnim() {
   hexBtn.querySelector('.pandero-hex-svg')?.getAnimations().forEach(a => a.cancel());
 }
 
+function fireBeat(idx) {
+  if (idx === lastBeatIdx) return;
+  lastBeatIdx = idx;
+  root.querySelectorAll('.pandero-beat').forEach((d, i) => {
+    d.classList.toggle('pandero-beat-active', i === idx);
+  });
+  // Main beats (1 and 4): strong flash. Subdivisions (2,3,5,6): subtle flash.
+  const isMainBeat = idx === 0 || idx === 3;
+  hexBtn.querySelector('.pandero-hex-svg').animate(
+    [{ filter: isMainBeat ? 'brightness(1.5)' : 'brightness(1.2)' }, { filter: 'brightness(1)' }],
+    { duration: isMainBeat ? 280 : 160, easing: 'ease-out' }
+  );
+}
+
 function animLoop() {
   if (!isPlaying || !audioBuffer) return;
-  const elapsed = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
-  const posInBuffer = elapsed % audioBuffer.duration;
-  const beatIdx = Math.floor(posInBuffer / (audioBuffer.duration / 4)) % 2;
-  if (beatIdx !== lastBeatIdx) {
-    lastBeatIdx = beatIdx;
-    root.querySelectorAll('.pandero-beat').forEach((d, i) => {
-      d.classList.toggle('pandero-beat-active', i === beatIdx);
-    });
-    // Flash the hexagon via Web Animations API — creates a new Animation
-    // object on every beat so it always fires, no reflow tricks needed.
-    hexBtn.querySelector('.pandero-hex-svg').animate(
-      [{ filter: 'brightness(1.5)' }, { filter: 'brightness(1)' }],
-      { duration: 280, easing: 'ease-out' }
-    );
+
+  if (sliceMode) {
+    // Slice mode: beat driven by the scheduler queue, not the odometer.
+    // Each entry carries the precise AudioContext timestamp of the slice that
+    // marks a beat change — so the visual fires when the audio actually plays.
+    const now = audioCtx.currentTime;
+    while (sliceBeatQueue.length && sliceBeatQueue[0].when <= now) {
+      fireBeat(sliceBeatQueue.shift().idx);
+    }
+  } else {
+    // WSOLA mode: continuous odometer gives exact buffer position.
+    const elapsed     = accumulatedBufferTime + (audioCtx.currentTime - lastTempoChangeCtxTime) * currentRatio;
+    const posInBuffer = elapsed % audioBuffer.duration;
+    fireBeat(Math.floor(posInBuffer / (audioBuffer.duration / 12)) % 6);
   }
+
   animFrame = requestAnimationFrame(animLoop);
 }
 
@@ -487,6 +563,9 @@ function handleTempoChange(e) {
     // s.stop() mid-playback causes an audible click on every slider movement.
     // nextSliceWhen already points to the next upcoming segment; new segments
     // will be spaced at the new ratio from that point forward.
+    // Flush stale beat-queue entries: they were computed at the old ratio and
+    // their timestamps are no longer accurate. The scheduler repopulates within 100ms.
+    sliceBeatQueue = [];
     return;
   } else {
     // Staying in WSOLA mode — live tandem update, no restart needed.
