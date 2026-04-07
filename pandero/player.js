@@ -196,50 +196,9 @@ function findTransients(buffer) {
       lastF = f;
     }
   }
-  // Post-process: merge consecutive close hits with continuous energy between them.
-  // A trill/roll keeps significant energy at the midpoint; discrete hits decay rapidly.
-  const MERGE_WIN_SEC = 0.50;  // only consider merging hits ≤ 500ms apart
-  const TRILL_RATIO   = 0.18;  // merge if midpoint RMS > 18% of onset RMS
-  const WIN20 = Math.floor(0.010 * sr);  // 10 ms window for energy check
-
-  const merged = hits.length ? [hits[0]] : [];
-  for (let i = 1; i < hits.length; i++) {
-    const prev = merged[merged.length - 1];
-    const gap  = hits[i] - prev;
-    if (gap < MERGE_WIN_SEC) {
-      const midS  = Math.floor(((prev + hits[i]) * 0.5) * sr);
-      const prevS = Math.floor(prev * sr);
-      const hit2S = Math.floor(hits[i] * sr);
-      let midE = 0, prevE = 0, hit2E = 0;
-      for (let k = 0; k < WIN20; k++) {
-        const mv  = midS  + k < data.length ? data[midS  + k] : 0;
-        const pv  = prevS + k < data.length ? data[prevS + k] : 0;
-        const h2v = hit2S + k < data.length ? data[hit2S + k] : 0;
-        midE  += mv  * mv;
-        prevE += pv  * pv;
-        hit2E += h2v * h2v;
-      }
-      // Two merge criteria — either triggers a merge:
-      // 1. High continuous energy (trill roll): midRMS > 18% of onset RMS.
-      const highContinuous = midE > TRILL_RATIO * TRILL_RATIO * prevE;
-      // 2. Quiet midpoint + loud first onset (golpe→trill boundary):
-      //    the golpe decays fully before the softer trill begins, leaving a
-      //    near-silent midpoint (midRMS/hit2RMS ≈ 0.12 measured). Discrete
-      //    golpes have similar strength (prevRMS/hit2RMS < 1.3) and a louder
-      //    midpoint relative to the next onset (≥ 0.19 measured), so both
-      //    sub-conditions must hold to avoid false merges on the 3-golpe group.
-      const lowMidpoint    = midE < 0.15 * 0.15 * hit2E   // midpoint quiet vs trill onset
-                          && prevE > 1.3  * 1.3  * hit2E;  // golpe louder than trill onset
-      if (highContinuous || lowMidpoint) {
-        continue;  // absorb into previous segment
-      }
-    }
-    merged.push(hits[i]);
-  }
-
-  console.log('[pandero] transients:', hits.length, '→ merged:', merged.length,
-    '—', merged.map(t => t.toFixed(3) + 's').join('  '));
-  return merged;
+  console.log('[pandero] transients detected:', hits.length,
+    '—', hits.map(t => t.toFixed(3) + 's').join('  '));
+  return hits;
 }
 
 // ---------------------------------------------------------------------------
